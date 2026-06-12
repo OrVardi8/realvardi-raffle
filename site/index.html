@@ -100,6 +100,12 @@
   .chip button{background:none; border:none; color:#e6b8ff; cursor:pointer; font-size:15px; line-height:1;
     min-width:26px; min-height:26px; display:inline-flex; align-items:center; justify-content:center; border-radius:50%}
   .chip button:hover{background:rgba(255,255,255,.14); color:#fff}
+  .chip .votes{display:inline-flex; align-items:center; gap:5px; background:rgba(0,0,0,.28);
+    border-radius:999px; padding:2px 4px}
+  .chip .votes button{min-width:22px; min-height:22px; width:22px; height:22px; font-size:16px; font-weight:700;
+    background:rgba(181,103,255,.3); color:#fff}
+  .chip .votes button:hover{background:var(--p3)}
+  .chip .votes b{font-size:12px; min-width:26px; text-align:center; color:var(--gold); font-weight:800}
 
   .settings-grid{display:grid; grid-template-columns:1fr 1fr; gap:18px}
   @media(max-width:760px){.settings-grid{grid-template-columns:1fr}}
@@ -127,9 +133,10 @@
   .track-scroll{border-radius:16px}
   .track{position:relative; direction:ltr; border:1px solid rgba(181,103,255,.55); border-radius:16px; overflow:hidden;
     box-shadow:0 0 0 1px rgba(255,95,206,.22), 0 0 46px rgba(181,103,255,.4), inset 0 0 80px rgba(0,0,0,.4)}
-  .scene{position:absolute; inset:0; width:100%; height:100%; z-index:0}
+  .scene{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:0}
   .track::after{content:""; position:absolute; inset:0; z-index:1; pointer-events:none;
-    background:linear-gradient(90deg, rgba(7,3,20,.5), rgba(7,3,20,.1) 28%, rgba(7,3,20,.1) 72%, rgba(7,3,20,.32))}
+    background:linear-gradient(180deg, rgba(7,3,20,.16), rgba(7,3,20,.5)),
+               linear-gradient(90deg, rgba(7,3,20,.5), rgba(7,3,20,.08) 26%, rgba(7,3,20,.08) 74%, rgba(7,3,20,.34))}
   .startline{position:absolute; top:0; bottom:0; left:8px; width:6px; z-index:4;
     background:repeating-linear-gradient(180deg,#fff 0 8px,#b567ff 8px 16px); opacity:.7; border-radius:3px;
     box-shadow:0 0 12px rgba(181,103,255,.6)}
@@ -347,6 +354,7 @@
             </g>
           </g>
         </svg>
+        <img class="scene scene-img" src="la-background.png" alt="" onerror="this.remove()">
         <div class="startline"></div>
         <div class="finish"></div>
         <div class="flag">🏁</div>
@@ -422,18 +430,25 @@ function buildCharGrid(){
 /* ---------- participants ---------- */
 function normalize(raw){ return raw.split(/[\r\n,;\t]+/).map(s=>s.trim()).filter(Boolean); }
 function addNames(names){
-  const existing=new Set(participants.map(p=>p.toLowerCase())); let added=0;
-  for(const n of names){ if(n && !existing.has(n.toLowerCase())){ participants.push(n); existing.add(n.toLowerCase()); added++; } }
+  const existing=new Set(participants.map(p=>p.name.toLowerCase())); let added=0;
+  for(const n of names){ const key=n.toLowerCase(); if(n && !existing.has(key)){ participants.push({name:n,votes:1}); existing.add(key); added++; } }
   render(); return added;
 }
 function render(){
-  $('#countPill').textContent=participants.length;
+  const totalVotes=participants.reduce((s,p)=>s+p.votes,0);
+  $('#countPill').textContent = participants.length + (totalVotes>participants.length ? ` · ${totalVotes} קולות` : '');
   const chips=$('#chips'); chips.innerHTML='';
   participants.forEach((p,i)=>{
     const c=document.createElement('div'); c.className='chip';
-    c.innerHTML=`<span></span><button title="הסר">✕</button>`;
-    c.querySelector('span').textContent=p;
-    c.querySelector('button').onclick=()=>{ participants.splice(i,1); render(); };
+    c.innerHTML=`<span class="cname"></span>`+
+      `<span class="votes"><button class="vmin" title="פחות קולות" aria-label="פחות קולות">−</button>`+
+      `<b class="vnum"></b><button class="vplus" title="עוד קולות" aria-label="עוד קולות">+</button></span>`+
+      `<button class="rm" title="הסר" aria-label="הסר">✕</button>`;
+    c.querySelector('.cname').textContent=p.name;
+    c.querySelector('.vnum').textContent='×'+p.votes;
+    c.querySelector('.vmin').onclick=()=>{ p.votes=Math.max(1,p.votes-1); render(); };
+    c.querySelector('.vplus').onclick=()=>{ p.votes=Math.min(99,p.votes+1); render(); };
+    c.querySelector('.rm').onclick=()=>{ participants.splice(i,1); render(); };
     chips.appendChild(c);
   });
   $('#emptyHint').style.display=participants.length?'none':'block';
@@ -460,7 +475,13 @@ $('#durSlider').oninput=e=>$('#durVal').textContent=e.target.value;
 
 /* ---------- fair shuffle ---------- */
 function rand(n){ if(window.crypto&&crypto.getRandomValues){ const u=new Uint32Array(1); crypto.getRandomValues(u); return u[0]/4294967296*n; } return Math.random()*n; }
-function shuffle(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(rand(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function rand01(){ return 1-rand(1); } // uniform in (0,1]
+// weighted-fair ranking (Efraimidis–Spirakis): key = -ln(U)/votes, sort ascending.
+// more votes ⇒ smaller key on average ⇒ ranks earlier ⇒ higher win chance, fairly.
+function weightedOrder(items){
+  return items.map((p,i)=>({name:p.name,i,key:-Math.log(rand01())/Math.max(1,p.votes)}))
+              .sort((a,b)=>a.key-b.key);
+}
 function pickChar(){ return CHARACTERS[Math.floor(rand(CHARACTERS.length))]; }
 
 /* ---------- the race ---------- */
@@ -474,7 +495,7 @@ function buildRace(){
   k=Math.max(1,Math.min(k,participants.length)); $('#winnersCount').value=k;
   const durSec=parseInt($('#durSlider').value)||8;
 
-  const order=shuffle(participants.map((name,i)=>({name,i})));
+  const order=weightedOrder(participants);
   const rankOf=new Map(); order.forEach((o,r)=>rankOf.set(o.i,r));
   const N=participants.length, baseTime=durSec*1000;
 
@@ -491,13 +512,14 @@ function buildRace(){
 
   // compact: squeeze all lanes into ~55% of the screen height — no scrolling
   const maxTrackPx=Math.max(200, Math.min(window.innerHeight*0.55, 540));
-  const laneH=Math.max(20, Math.min(64, Math.floor(maxTrackPx/N)));
-  const charPx=Math.round(Math.max(15, Math.min(40, laneH*0.62)));
+  const laneH=Math.max(18, Math.min(64, Math.floor(maxTrackPx/N)));
+  const charPx=40;                 // fixed — characters stay big; when crowded they overlap
   const namePx=laneH<30?10:12;
-  const showName=laneH>=18;
+  const showName=laneH>=22;        // hide labels only when extremely dense
 
   const lanes=[];
-  participants.forEach((name,i)=>{
+  participants.forEach((p,i)=>{
+    const name=p.name;
     const lane=document.createElement('div'); lane.className='lane'; lane.style.height=laneH+'px';
     const ch = selectedChar==='mix' ? pickChar() : selectedChar;
     const run=document.createElement('div'); run.className='runner';
