@@ -510,17 +510,20 @@ function buildRace(){
   $('#goOverlay').style.display='flex';
   $('#countdown').style.display='none';
   syncMute();
+  window.scrollTo(0,0);            // anchor to top so the measurement below is correct
 
   const track=$('#track');
   track.querySelectorAll('.lane').forEach(l=>l.remove());
 
-  // Fit everyone: each lane gets at least ~32px so the character's head is ALWAYS visible,
-  // even when crowded. Track grows (page scrolls) if there are very many participants.
-  const maxTrackPx=Math.min(window.innerHeight*0.74, 820);
-  const laneH=Math.max(32, Math.min(60, Math.floor(maxTrackPx/N)));
-  const charPx=40;                 // fixed — characters stay big; overlap is partial, heads stay visible
+  // Size lanes so the WHOLE race fits in ONE screen — never scroll.
+  // Characters stay a fixed 40px, so when there are many participants they simply
+  // overlap a little (that's fine). We measure the real space left below the track top.
+  const topY = track.getBoundingClientRect().top;
+  const usable = Math.max(150, window.innerHeight - topY - 84);  // 84 ≈ back button + margins
+  const laneH = Math.max(8, Math.min(60, Math.floor((usable - 28) / N)));  // 28 = track padding-top
+  const charPx=40;                 // fixed — characters stay big; overlap when dense
   const namePx=laneH<34?10:12;
-  const showName=laneH>=24;        // hide labels only when extremely dense
+  const showName=laneH>=22;        // hide labels only when extremely dense
 
   const charByIdx=new Map();
   const lanes=[];
@@ -543,7 +546,6 @@ function buildRace(){
   });
   winners.forEach(w=> w.ch=charByIdx.get(w.idx));
   raceState={winners,lanes,started:false,firstCrossAt:null};
-  window.scrollTo({top:0, behavior:'auto'});
 }
 
 function go(){
