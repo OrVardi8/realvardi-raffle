@@ -105,9 +105,10 @@
   .lane.won{background:linear-gradient(90deg,transparent,rgba(255,216,107,.18),rgba(181,103,255,.35))}
   .obstacle{position:absolute; bottom:6px; font-size:24px; z-index:1; opacity:.9; transform:translateX(-50%)}
   .runner{position:absolute; left:6px; bottom:4px; z-index:2; text-align:center; will-change:transform}
-  .runner .char{font-size:42px; line-height:1; filter:drop-shadow(0 3px 5px rgba(0,0,0,.55))}
+  .runner .char{font-size:42px; line-height:1; transform:scaleX(-1); display:inline-block;
+    filter:drop-shadow(0 3px 5px rgba(0,0,0,.55))}
   .runner .rname{font-size:12px; color:#eadcff; text-shadow:0 1px 3px #000; margin-top:-2px;
-    max-width:90px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+    direction:rtl; unicode-bidi:isolate; max-width:90px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 
   .go-overlay{position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
     background:rgba(14,4,32,.55); backdrop-filter:blur(2px); z-index:10}
@@ -198,6 +199,12 @@
         </label>
       </div>
       <div class="field" style="margin-top:14px">
+        <label class="switch">
+          <input type="checkbox" id="soundToggle" checked>
+          <span>🔊 צלילים — ספירה לאחור, זינוק וניצחון</span>
+        </label>
+      </div>
+      <div class="field" style="margin-top:14px">
         <label>בחר דמות לכל המתחרים</label>
         <div class="char-grid" id="charGrid"></div>
       </div>
@@ -243,6 +250,25 @@
 <script>
 const $ = s => document.querySelector(s);
 let participants = [];
+
+/* ---------- sounds (Web Audio, no files) ---------- */
+let actx=null;
+function audio(){ try{ if(!actx) actx=new (window.AudioContext||window.webkitAudioContext)();
+  if(actx.state==='suspended') actx.resume(); }catch(e){} return actx; }
+function soundOn(){ const t=$('#soundToggle'); return !t || t.checked; }
+function tone(freq,start,dur,type='sine',vol=0.2){
+  if(!soundOn()) return; const a=audio(); if(!a) return;
+  const t=a.currentTime+start, o=a.createOscillator(), g=a.createGain();
+  o.type=type; o.frequency.value=freq; o.connect(g); g.connect(a.destination);
+  g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(vol,t+0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.start(t); o.stop(t+dur+0.03);
+}
+function sndBeep(){ tone(640,0,0.18,'square',0.16); }
+function sndGo(){ tone(880,0,0.45,'sawtooth',0.18); tone(1320,0.04,0.4,'square',0.1); }
+function sndCross(){ tone(1046,0,0.16,'triangle',0.22); tone(1568,0.08,0.18,'triangle',0.15); }
+function sndFanfare(){ [523,659,784,1046].forEach((f,i)=>tone(f,i*0.13,0.32,'square',0.18));
+  tone(1318,0.52,0.7,'sawtooth',0.16); }
 
 /* ---------- characters ---------- */
 const CHARACTERS = ['🦄','🐎','🐇','🐢','🐆','🦊','🐅','🐉','🦖','🐸','🐶','🐱','🦅','🐌','🐝','🦔','🦘','🐧','🦩','🚀','🏎️','🛼'];
@@ -348,7 +374,7 @@ function buildRace(){
       dur: baseTime*(1 + rank*(0.45/Math.max(1,N))) + rand(220),
       wob:0.5+rand(0.9), phase:rand(6.28), done:false});
   });
-  raceState={order,k,lanes,obstaclesOn,started:false};
+  raceState={order,k,lanes,obstaclesOn,started:false,firstCrossAt:null};
 }
 
 function go(){
@@ -357,11 +383,12 @@ function go(){
   $('#goOverlay').style.display='none';
   const cd=$('#countdown'), num=$('#cdNum');
   cd.style.display='flex';
+  audio(); // unlock audio on this user gesture
   const seq=['3','2','1','צאו!']; let idx=0;
   function step(){
     num.textContent=seq[idx];
-    num.parentElement.querySelector('span').style.animation='none';
-    void num.offsetWidth; num.style.animation='pop .8s ease';
+    num.style.animation='none'; void num.offsetWidth; num.style.animation='pop .8s ease';
+    if(idx<3) sndBeep(); else sndGo();
     idx++;
     if(idx<seq.length){ setTimeout(step,800); }
     else { setTimeout(()=>{ cd.style.display='none'; runAnimation(); },650); }
@@ -374,30 +401,47 @@ function runAnimation(){
   const {lanes,order,k}=raceState;
   const track=$('#track');
   const distance=track.clientWidth-90;   // left(start) -> right(finish)
+  raceState.distance=distance;
   const t0=performance.now();
 
   function frame(now){
-    const el=now-t0; let allDone=true;
+    const el=now-t0;
     for(const L of lanes){
-      let prog=el/L.dur;
-      if(prog>=1){ prog=1; L.done=true; } else allDone=false;
+      let prog=el/L.dur; if(prog>1) prog=1;
       const wob = prog<0.96 ? Math.sin(el/170*L.wob+L.phase)*0.045*(1-prog) : 0;
       const shown=Math.max(0,Math.min(1,prog+wob));
       const x=shown*distance;            // move right (LTR)
-      // jump over nearest obstacle
       let jump=0;
       if(raceState.obstaclesOn && prog<1){
         for(const f of OBSTACLE_FRACS){ const d=Math.abs(prog-f);
           if(d<0.06){ const h=Math.sin((1-d/0.06)*Math.PI/2)*30; if(h>jump) jump=h; } }
       }
       const bob = prog<1 ? Math.abs(Math.sin(el/85+L.phase))*4 : 0;
-      const y=-(jump+bob);
-      L.run.style.transform=`translate(${x}px, ${y}px) scaleX(-1)`;
+      L.run.style.transform=`translate(${x}px, ${-(jump+bob)}px)`;
+      if(prog>=1 && !L.done){
+        L.done=true;
+        if(raceState.firstCrossAt===null){     // the winner just crossed
+          raceState.firstCrossAt=now; sndCross();
+          $('#raceTitle').textContent='🏁 יש מנצח!';
+        }
+      }
     }
-    if(!allDone){ rafId=requestAnimationFrame(frame); }
-    else finishRace(order,k,lanes);
+    // one second after the first runner finishes → bring everyone to the line
+    if(raceState.firstCrossAt!==null && now-raceState.firstCrossAt>=1000){
+      bringAllToFinish(); return;
+    }
+    rafId=requestAnimationFrame(frame);
   }
   rafId=requestAnimationFrame(frame);
+}
+
+function bringAllToFinish(){
+  const {lanes,order,k,distance}=raceState;
+  lanes.forEach(L=>{
+    L.run.style.transition='transform .6s cubic-bezier(.22,1,.36,1)';
+    L.run.style.transform=`translate(${distance}px, 0)`;
+  });
+  setTimeout(()=>finishRace(order,k,lanes), 750);
 }
 
 function finishRace(order,k,lanes){
@@ -405,21 +449,19 @@ function finishRace(order,k,lanes){
   const winSet=new Set(winners.map(o=>o.i));
   lanes.forEach(L=>{ if(winSet.has(L.i)) L.lane.classList.add('won'); });
   const charOf=new Map(lanes.map(L=>[L.i,L.ch]));
-  setTimeout(()=>{
-    $('#raceCard').style.display='none';
-    $('#results').style.display='block';
-    $('#winnerBig').textContent = k===1 ? `🎉 ${winners[0].name} 🎉` : `🎉 ${k} הזוכים 🎉`;
-    const podium=$('#podium'); podium.innerHTML='';
-    const medals=['🥇','🥈','🥉'];
-    winners.forEach((w,idx)=>{
-      const d=document.createElement('div'); d.className='place'+(idx===0?' p1':'');
-      d.innerHTML=`<span class="medal">${medals[idx]||'🏅'}</span><span class="pname"></span><span class="pchar"></span>`;
-      d.querySelector('.pname').textContent=`${idx+1}. ${w.name}`;
-      d.querySelector('.pchar').textContent=charOf.get(w.i)||'🦄';
-      podium.appendChild(d);
-    });
-    burst();
-  },700);
+  $('#raceCard').style.display='none';
+  $('#results').style.display='block';
+  $('#winnerBig').textContent = k===1 ? `🎉 ${winners[0].name} 🎉` : `🎉 ${k} הזוכים 🎉`;
+  const podium=$('#podium'); podium.innerHTML='';
+  const medals=['🥇','🥈','🥉'];
+  winners.forEach((w,idx)=>{
+    const d=document.createElement('div'); d.className='place'+(idx===0?' p1':'');
+    d.innerHTML=`<span class="medal">${medals[idx]||'🏅'}</span><span class="pname"></span><span class="pchar"></span>`;
+    d.querySelector('.pname').textContent=`${idx+1}. ${w.name}`;
+    d.querySelector('.pchar').textContent=charOf.get(w.i)||'🦄';
+    podium.appendChild(d);
+  });
+  sndFanfare(); burst();
 }
 
 $('#startBtn').onclick=buildRace;
