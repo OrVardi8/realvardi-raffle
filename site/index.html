@@ -150,8 +150,9 @@
   .lane.won{background:linear-gradient(90deg,transparent,rgba(255,216,107,.3),rgba(181,103,255,.42)); box-shadow:inset 0 0 30px rgba(255,216,107,.25)}
   .runner{position:absolute; left:6px; bottom:1px; z-index:3; text-align:center; will-change:transform}
   .runner .char{line-height:1; transform:scaleX(-1); display:inline-block; filter:drop-shadow(0 2px 6px rgba(0,0,0,.8))}
-  .runner .rname{color:#fff; font-weight:600; text-shadow:0 1px 4px #000, 0 0 7px #000; margin-top:-2px;
-    direction:rtl; unicode-bidi:isolate; max-width:120px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .runner .rname{display:inline-block; color:#fff; font-weight:700; text-shadow:0 1px 3px #000; margin-top:-1px;
+    direction:rtl; unicode-bidi:isolate; max-width:130px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    background:rgba(7,3,20,.55); padding:0 5px; border-radius:6px; line-height:1.5}
 
   .go-overlay{position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
     background:rgba(7,3,20,.62); backdrop-filter:blur(3px); z-index:60}
@@ -520,10 +521,12 @@ function buildRace(){
   // overlap a little (that's fine). We measure the real space left below the track top.
   const topY = track.getBoundingClientRect().top;
   const usable = Math.max(150, window.innerHeight - topY - 84);  // 84 ≈ back button + margins
-  const laneH = Math.max(8, Math.min(60, Math.floor((usable - 28) / N)));  // 28 = track padding-top
-  const charPx=40;                 // fixed — characters stay big; overlap when dense
-  const namePx=laneH<34?10:12;
-  const showName=laneH>=22;        // hide labels only when extremely dense
+  const laneH = Math.max(1, Math.min(58, (usable - 28) / N));  // sub-pixel ok; total always fits the screen
+  // characters shrink with the lanes so even ~300 racers fit on one screen (duck-race swarm style)
+  const charPx = Math.round(Math.max(12, Math.min(40, laneH*1.5)));
+  const namePx = laneH>=30 ? 12 : (laneH>=22 ? 11 : (laneH>=14 ? 9 : 0)); // 0 ⇒ no room, hide names
+  const showName = namePx>0;
+  const glow = N<=80;              // skip per-character glow when very crowded (clarity + performance)
 
   const charByIdx=new Map();
   const lanes=[];
@@ -535,9 +538,9 @@ function buildRace(){
     const run=document.createElement('div'); run.className='runner';
     run.innerHTML=`<div class="char"></div><div class="rname"></div>`;
     const cEl=run.querySelector('.char'); cEl.textContent=ch; cEl.style.fontSize=charPx+'px';
-    cEl.style.filter=`drop-shadow(0 0 7px ${COLORS[idx%COLORS.length]})`;
-    const nEl=run.querySelector('.rname'); nEl.textContent=name; nEl.style.fontSize=namePx+'px';
-    nEl.style.display=showName?'block':'none';
+    if(glow) cEl.style.filter=`drop-shadow(0 0 6px ${COLORS[idx%COLORS.length]})`;
+    const nEl=run.querySelector('.rname'); nEl.textContent=name;
+    if(showName){ nEl.style.fontSize=namePx+'px'; } else { nEl.style.display='none'; }
     lane.appendChild(run); track.appendChild(lane);
     const rank=rankOf.get(idx);
     lanes.push({idx, pi:r.pi, name, ch, run, lane,
