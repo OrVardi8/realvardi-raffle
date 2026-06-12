@@ -152,10 +152,10 @@
   .runner .rname{color:#fff; font-weight:600; text-shadow:0 1px 4px #000, 0 0 7px #000; margin-top:-2px;
     direction:rtl; unicode-bidi:isolate; max-width:120px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 
-  .go-overlay{position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-    background:rgba(7,3,20,.5); backdrop-filter:blur(3px); z-index:10}
+  .go-overlay{position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+    background:rgba(7,3,20,.62); backdrop-filter:blur(3px); z-index:60}
   .go-overlay .btn{width:auto; min-width:260px; font-size:22px}
-  .countdown{position:absolute; inset:0; display:none; align-items:center; justify-content:center; z-index:11; pointer-events:none}
+  .countdown{position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:61; pointer-events:none}
   .countdown span{font-size:clamp(80px,16vw,150px); font-weight:900;
     background:linear-gradient(90deg,#ffd86b,#fff,#ff5fce); -webkit-background-clip:text; background-clip:text; color:transparent;
     text-shadow:0 0 50px rgba(255,95,206,.7); animation:pop .8s ease}
@@ -495,9 +495,16 @@ function buildRace(){
   k=Math.max(1,Math.min(k,participants.length)); $('#winnersCount').value=k;
   const durSec=parseInt($('#durSlider').value)||8;
 
-  const order=weightedOrder(participants);
-  const rankOf=new Map(); order.forEach((o,r)=>rankOf.set(o.i,r));
-  const N=participants.length, baseTime=durSec*1000;
+  // expand votes into individual racers — each vote is its own character on the track
+  const racers=[];
+  participants.forEach((p,pi)=>{ for(let v=0; v<p.votes; v++) racers.push({name:p.name, pi}); });
+  // uniform-random finishing order over racers ⇒ each person's chance scales with votes (fair)
+  const order=shuffle(racers.map((r,idx)=>({name:r.name, pi:r.pi, idx})));
+  const rankOf=new Map(); order.forEach((o,r)=>rankOf.set(o.idx,r));
+  const N=racers.length, baseTime=durSec*1000;
+  // winners = first k DISTINCT people in the finishing order (a person can't win twice)
+  const winners=[]; const seenW=new Set();
+  for(const o of order){ if(!seenW.has(o.pi)){ seenW.add(o.pi); winners.push({name:o.name, pi:o.pi, idx:o.idx}); if(winners.length>=k) break; } }
 
   $('#setupCard').style.display='none';
   $('#results').style.display='none';
@@ -510,31 +517,36 @@ function buildRace(){
   const track=$('#track');
   track.querySelectorAll('.lane').forEach(l=>l.remove());
 
-  // compact: squeeze all lanes into ~55% of the screen height — no scrolling
-  const maxTrackPx=Math.max(200, Math.min(window.innerHeight*0.55, 540));
-  const laneH=Math.max(18, Math.min(64, Math.floor(maxTrackPx/N)));
-  const charPx=40;                 // fixed — characters stay big; when crowded they overlap
-  const namePx=laneH<30?10:12;
-  const showName=laneH>=22;        // hide labels only when extremely dense
+  // Fit everyone: each lane gets at least ~32px so the character's head is ALWAYS visible,
+  // even when crowded. Track grows (page scrolls) if there are very many participants.
+  const maxTrackPx=Math.min(window.innerHeight*0.74, 820);
+  const laneH=Math.max(32, Math.min(60, Math.floor(maxTrackPx/N)));
+  const charPx=40;                 // fixed — characters stay big; overlap is partial, heads stay visible
+  const namePx=laneH<34?10:12;
+  const showName=laneH>=24;        // hide labels only when extremely dense
 
+  const charByIdx=new Map();
   const lanes=[];
-  participants.forEach((p,i)=>{
-    const name=p.name;
+  racers.forEach((r,idx)=>{
+    const name=r.name;
     const lane=document.createElement('div'); lane.className='lane'; lane.style.height=laneH+'px';
     const ch = selectedChar==='mix' ? pickChar() : selectedChar;
+    charByIdx.set(idx, ch);
     const run=document.createElement('div'); run.className='runner';
     run.innerHTML=`<div class="char"></div><div class="rname"></div>`;
     const cEl=run.querySelector('.char'); cEl.textContent=ch; cEl.style.fontSize=charPx+'px';
-    cEl.style.filter=`drop-shadow(0 0 7px ${COLORS[i%COLORS.length]})`;
+    cEl.style.filter=`drop-shadow(0 0 7px ${COLORS[idx%COLORS.length]})`;
     const nEl=run.querySelector('.rname'); nEl.textContent=name; nEl.style.fontSize=namePx+'px';
     nEl.style.display=showName?'block':'none';
     lane.appendChild(run); track.appendChild(lane);
-    const rank=rankOf.get(i);
-    lanes.push({i,name,ch,run,lane,
+    const rank=rankOf.get(idx);
+    lanes.push({idx, pi:r.pi, name, ch, run, lane,
       dur: baseTime*(1 + rank*(0.45/Math.max(1,N))) + rand(220),
       wob:0.5+rand(0.9), phase:rand(6.28), done:false});
   });
-  raceState={order,k,lanes,started:false,firstCrossAt:null};
+  winners.forEach(w=> w.ch=charByIdx.get(w.idx));
+  raceState={winners,lanes,started:false,firstCrossAt:null};
+  window.scrollTo({top:0, behavior:'auto'});
 }
 
 function go(){
@@ -558,7 +570,7 @@ function go(){
 
 function runAnimation(){
   $('#raceTitle').textContent='🏁 המירוץ בעיצומו...';
-  const {lanes,order,k}=raceState;
+  const {lanes}=raceState;
   const track=$('#track');
   const distance=track.clientWidth-90;   // left(start) -> right(finish)
   raceState.distance=distance;
@@ -591,21 +603,22 @@ function runAnimation(){
 }
 
 function bringAllToFinish(){
-  const {lanes,order,k,distance}=raceState;
+  const {lanes,distance}=raceState;
   lanes.forEach(L=>{
     L.run.style.transition='transform .6s cubic-bezier(.22,1,.36,1)';
     L.run.style.transform=`translate(${distance}px, 0)`;
   });
-  setTimeout(()=>finishRace(order,k,lanes), 750);
+  setTimeout(finishRace, 750);
 }
 
-function finishRace(order,k,lanes){
-  const winners=order.slice(0,k);
-  const winSet=new Set(winners.map(o=>o.i));
-  lanes.forEach(L=>{ if(winSet.has(L.i)) L.lane.classList.add('won'); });
-  const charOf=new Map(lanes.map(L=>[L.i,L.ch]));
+function finishRace(){
+  const {winners,lanes}=raceState;
+  const winPis=new Set(winners.map(w=>w.pi));
+  lanes.forEach(L=>{ if(winPis.has(L.pi)) L.lane.classList.add('won'); });
+  const k=winners.length;
   $('#raceCard').style.display='none';
   $('#results').style.display='block';
+  window.scrollTo({top:0, behavior:'smooth'});
   $('#winnerBig').textContent = k===1 ? `🎉 ${winners[0].name} 🎉` : `🎉 ${k} הזוכים 🎉`;
   const podium=$('#podium'); podium.innerHTML='';
   const medals=['🥇','🥈','🥉'];
@@ -613,7 +626,7 @@ function finishRace(order,k,lanes){
     const d=document.createElement('div'); d.className='place'+(idx===0?' p1':'');
     d.innerHTML=`<span class="medal">${medals[idx]||'🏅'}</span><span class="pname"></span><span class="pchar"></span>`;
     d.querySelector('.pname').textContent=`${idx+1}. ${w.name}`;
-    d.querySelector('.pchar').textContent=charOf.get(w.i)||'🦄';
+    d.querySelector('.pchar').textContent=w.ch||'🦄';
     podium.appendChild(d);
   });
   sndFanfare(); burst();
