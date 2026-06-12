@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RealVardi · הגרלת חדי-קרן</title>
+<link rel="icon" type="image/png" href="logo.png">
+<style>
+  :root{
+    --p1:#964bcc; --p2:#4b0d87; --p3:#b567ff; --dark:#280d42; --ink:#171717; --white:#ffffff;
+    --bg1:#1a0833; --bg2:#280d42;
+  }
+  *{box-sizing:border-box; margin:0; padding:0}
+  body{
+    font-family:"Heebo","Segoe UI",Arial,sans-serif;
+    color:var(--white);
+    background:radial-gradient(1200px 600px at 50% -10%, #3a1466 0%, var(--bg1) 55%, #0e0420 100%);
+    min-height:100vh; padding:24px 16px 60px;
+  }
+  .wrap{max-width:1100px; margin:0 auto}
+  header{display:flex; align-items:center; gap:16px; justify-content:center; margin-bottom:8px}
+  header img{width:64px; height:64px; filter:drop-shadow(0 4px 14px rgba(181,103,255,.5))}
+  header h1{font-size:30px; font-weight:800; letter-spacing:.5px;
+    background:linear-gradient(90deg,#b567ff,#fff,#964bcc); -webkit-background-clip:text; background-clip:text; color:transparent}
+  .sub{text-align:center; color:#cdb6e6; margin-bottom:26px; font-size:15px}
+
+  .card{
+    background:linear-gradient(180deg, rgba(75,13,135,.45), rgba(40,13,66,.6));
+    border:1px solid rgba(181,103,255,.28); border-radius:18px; padding:22px;
+    box-shadow:0 10px 40px rgba(0,0,0,.35); margin-bottom:22px; backdrop-filter:blur(4px);
+  }
+  .card h2{font-size:18px; margin-bottom:14px; color:#e6d4ff; display:flex; align-items:center; gap:8px}
+
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:18px}
+  @media(max-width:760px){.grid{grid-template-columns:1fr}}
+
+  label{display:block; font-size:13px; color:#cdb6e6; margin-bottom:6px}
+  textarea,input[type=number]{
+    width:100%; background:rgba(14,4,32,.6); border:1px solid rgba(181,103,255,.3);
+    color:#fff; border-radius:12px; padding:11px 13px; font-size:15px; font-family:inherit; resize:vertical;
+  }
+  textarea{min-height:120px; line-height:1.7}
+  textarea:focus,input:focus{outline:none; border-color:var(--p3); box-shadow:0 0 0 3px rgba(181,103,255,.25)}
+
+  .btn{
+    border:none; cursor:pointer; font-family:inherit; font-weight:700; font-size:15px;
+    border-radius:12px; padding:12px 18px; transition:transform .12s, box-shadow .2s, opacity .2s; color:#fff;
+  }
+  .btn:hover{transform:translateY(-2px)}
+  .btn:active{transform:translateY(0)}
+  .btn-primary{background:linear-gradient(135deg,var(--p3),var(--p2)); box-shadow:0 8px 24px rgba(150,75,204,.45)}
+  .btn-ghost{background:rgba(181,103,255,.14); border:1px solid rgba(181,103,255,.35)}
+  .btn-lg{font-size:20px; padding:16px 28px; width:100%}
+  .btn:disabled{opacity:.45; cursor:not-allowed; transform:none}
+  .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+
+  .filebox{
+    border:2px dashed rgba(181,103,255,.45); border-radius:14px; padding:24px; text-align:center;
+    cursor:pointer; transition:.2s; background:rgba(14,4,32,.35);
+  }
+  .filebox:hover,.filebox.drag{background:rgba(181,103,255,.12); border-color:var(--p3)}
+  .filebox .big{font-size:30px; margin-bottom:6px}
+  .filebox small{color:#a98fd0}
+
+  .count-pill{background:var(--p2); border:1px solid rgba(181,103,255,.5); border-radius:999px;
+    padding:4px 12px; font-size:13px; font-weight:700}
+  .chips{display:flex; flex-wrap:wrap; gap:8px; max-height:200px; overflow:auto; margin-top:14px}
+  .chip{background:rgba(150,75,204,.25); border:1px solid rgba(181,103,255,.4); border-radius:999px;
+    padding:5px 10px 5px 12px; font-size:14px; display:flex; align-items:center; gap:7px}
+  .chip button{background:none; border:none; color:#e6b8ff; cursor:pointer; font-size:16px; line-height:1; padding:0}
+  .chip button:hover{color:#fff}
+
+  .winners-input{display:flex; align-items:center; gap:12px; flex-wrap:wrap}
+  .winners-input input{width:90px}
+
+  /* RACE */
+  #raceCard{display:none}
+  .track{
+    position:relative; background:repeating-linear-gradient(180deg,#1f0a3d 0 2px,#26104a 2px 4px);
+    border:1px solid rgba(181,103,255,.3); border-radius:14px; padding:10px 0; overflow:hidden;
+  }
+  .track-scroll{max-height:60vh; overflow-y:auto}
+  .finish{position:absolute; top:0; bottom:0; left:14px; width:14px; z-index:3;
+    background:repeating-linear-gradient(45deg,#fff 0 7px,#171717 7px 14px); opacity:.85;
+    border-radius:3px; box-shadow:0 0 14px rgba(255,255,255,.4)}
+  .flag{position:absolute; left:8px; top:-2px; font-size:20px; z-index:4}
+  .lane{position:relative; height:42px; display:flex; align-items:center; border-bottom:1px dashed rgba(181,103,255,.12)}
+  .lane:last-child{border-bottom:none}
+  .lane .name{position:absolute; right:12px; font-size:13px; color:#d9c4f4; white-space:nowrap; z-index:2;
+    text-shadow:0 1px 3px #000; max-width:38%; overflow:hidden; text-overflow:ellipsis}
+  .runner{position:absolute; right:30px; font-size:26px; z-index:2; will-change:transform;
+    filter:drop-shadow(0 3px 5px rgba(0,0,0,.5))}
+  .lane.won{background:linear-gradient(90deg,rgba(181,103,255,.35),transparent)}
+
+  /* RESULTS */
+  #results{display:none; text-align:center}
+  .winner-big{font-size:34px; font-weight:800; margin:6px 0 4px;
+    background:linear-gradient(90deg,#ffd86b,#fff,#b567ff); -webkit-background-clip:text; background-clip:text; color:transparent}
+  .podium{display:flex; flex-direction:column; gap:10px; max-width:480px; margin:18px auto 0}
+  .place{display:flex; align-items:center; gap:14px; background:rgba(150,75,204,.18);
+    border:1px solid rgba(181,103,255,.35); border-radius:12px; padding:12px 16px; font-size:17px}
+  .place .medal{font-size:24px}
+  .place .pname{font-weight:700; flex:1; text-align:right}
+  .place.p1{background:linear-gradient(90deg,rgba(255,216,107,.22),rgba(150,75,204,.18)); border-color:rgba(255,216,107,.5)}
+
+  .hint{font-size:12px; color:#a98fd0; margin-top:8px}
+  .toast{position:fixed; bottom:22px; left:50%; transform:translateX(-50%);
+    background:var(--p2); border:1px solid var(--p3); padding:11px 18px; border-radius:12px;
+    font-size:14px; opacity:0; transition:.3s; z-index:50; pointer-events:none}
+  .toast.show{opacity:1}
+  canvas#confetti{position:fixed; inset:0; pointer-events:none; z-index:40}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <img src="logo.png" alt="RealVardi">
+    <h1>הגרלת חדי-הקרן</h1>
+  </header>
+  <p class="sub">טען רשימת משתתפים, שחרר את חדי-הקרן — והראשון לקו הסיום מנצח 🦄</p>
+
+  <!-- SETUP -->
+  <div id="setupCard">
+    <div class="grid">
+      <div class="card">
+        <h2>📥 טעינת קובץ CSV</h2>
+        <div class="filebox" id="filebox">
+          <div class="big">📄</div>
+          <div>גרור לכאן קובץ CSV או לחץ לבחירה</div>
+          <small>שם בכל שורה, או מופרדים בפסיקים</small>
+        </div>
+        <input type="file" id="fileInput" accept=".csv,.txt" hidden>
+      </div>
+
+      <div class="card">
+        <h2>✍️ הזנה ידנית</h2>
+        <label>הקלד שמות — שם בכל שורה</label>
+        <textarea id="manualInput" placeholder="דנה כהן&#10;יוסי לוי&#10;מאיה..."></textarea>
+        <div class="row" style="margin-top:10px">
+          <button class="btn btn-ghost" id="addManual">➕ הוסף לרשימה</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>👥 משתתפים <span class="count-pill" id="countPill">0</span></h2>
+      <div class="row" style="justify-content:space-between">
+        <div class="winners-input">
+          <label style="margin:0">מספר זוכים:</label>
+          <input type="number" id="winnersCount" value="1" min="1" step="1">
+        </div>
+        <button class="btn btn-ghost" id="clearAll">🗑️ נקה הכל</button>
+      </div>
+      <div class="chips" id="chips"></div>
+      <p class="hint" id="emptyHint">עדיין אין משתתפים — טען קובץ או הקלד שמות.</p>
+    </div>
+
+    <button class="btn btn-primary btn-lg" id="startBtn" disabled>🏁 התחל את המירוץ</button>
+  </div>
+
+  <!-- RACE -->
+  <div class="card" id="raceCard">
+    <h2>🦄 המירוץ בעיצומו...</h2>
+    <div class="track-scroll">
+      <div class="track" id="track">
+        <div class="finish"></div>
+        <div class="flag">🏁</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="card" id="results">
+    <div style="font-size:46px">🏆</div>
+    <div class="winner-big" id="winnerBig"></div>
+    <div class="podium" id="podium"></div>
+    <div class="row" style="justify-content:center; margin-top:22px">
+      <button class="btn btn-primary" id="againBtn">🔁 הגרלה חוזרת (אותם משתתפים)</button>
+      <button class="btn btn-ghost" id="newBtn">⬅️ רשימה חדשה</button>
+    </div>
+  </div>
+</div>
+
+<canvas id="confetti"></canvas>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+let participants = [];
+
+/* ---------- participants management ---------- */
+function normalize(raw){
+  return raw.split(/[\r\n,;\t]+/).map(s=>s.trim()).filter(Boolean);
+}
+function addNames(names){
+  const existing = new Set(participants.map(p=>p.toLowerCase()));
+  let added = 0;
+  for(const n of names){
+    if(n && !existing.has(n.toLowerCase())){ participants.push(n); existing.add(n.toLowerCase()); added++; }
+  }
+  render();
+  return added;
+}
+function render(){
+  $('#countPill').textContent = participants.length;
+  const chips = $('#chips');
+  chips.innerHTML = '';
+  participants.forEach((p,i)=>{
+    const c = document.createElement('div');
+    c.className='chip';
+    c.innerHTML = `<span></span><button title="הסר">✕</button>`;
+    c.querySelector('span').textContent = p;
+    c.querySelector('button').onclick = ()=>{ participants.splice(i,1); render(); };
+    chips.appendChild(c);
+  });
+  $('#emptyHint').style.display = participants.length ? 'none':'block';
+  $('#startBtn').disabled = participants.length < 2;
+  const wc = $('#winnersCount');
+  wc.max = Math.max(1, participants.length);
+}
+function toast(msg){
+  const t=$('#toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+/* CSV / file */
+const filebox=$('#filebox'), fileInput=$('#fileInput');
+filebox.onclick=()=>fileInput.click();
+fileInput.onchange=e=>{ if(e.target.files[0]) readFile(e.target.files[0]); fileInput.value=''; };
+['dragover','dragenter'].forEach(ev=>filebox.addEventListener(ev,e=>{e.preventDefault();filebox.classList.add('drag');}));
+['dragleave','drop'].forEach(ev=>filebox.addEventListener(ev,e=>{e.preventDefault();filebox.classList.remove('drag');}));
+filebox.addEventListener('drop',e=>{ const f=e.dataTransfer.files[0]; if(f) readFile(f); });
+function readFile(file){
+  const r=new FileReader();
+  r.onload=()=>{ const n=addNames(normalize(r.result)); toast(n? `נוספו ${n} משתתפים מהקובץ`:'לא נמצאו שמות חדשים'); };
+  r.readAsText(file,'UTF-8');
+}
+
+$('#addManual').onclick=()=>{
+  const n=addNames(normalize($('#manualInput').value));
+  if(n){ $('#manualInput').value=''; toast(`נוספו ${n} משתתפים`); } else toast('לא נמצאו שמות חדשים');
+};
+$('#clearAll').onclick=()=>{ if(participants.length && confirm('לנקות את כל הרשימה?')){ participants=[]; render(); } };
+
+/* ---------- the race ---------- */
+const COLORS=['#b567ff','#964bcc','#ffd86b','#ff8fd1','#6bd5ff','#7CFFB2','#ff9d6b','#c0a6ff'];
+let rafId=null;
+// unbiased Fisher-Yates shuffle (uses crypto when available)
+function rand(n){
+  if(window.crypto&&crypto.getRandomValues){
+    const u=new Uint32Array(1); crypto.getRandomValues(u); return u[0]/4294967296*n;
+  }
+  return Math.random()*n;
+}
+function shuffle(arr){
+  const a=arr.slice();
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(rand(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+function startRace(){
+  let k = parseInt($('#winnersCount').value)||1;
+  k = Math.max(1, Math.min(k, participants.length));
+  $('#winnersCount').value=k;
+
+  // fair random ranking (unbiased)
+  const order = shuffle(participants.map((name,i)=>({name,i})));
+  const rankOf = new Map(); order.forEach((o,r)=>rankOf.set(o.i,r));
+  const N = participants.length;
+
+  $('#setupCard').style.display='none';
+  $('#results').style.display='none';
+  $('#raceCard').style.display='block';
+
+  const track=$('#track');
+  track.querySelectorAll('.lane').forEach(l=>l.remove());
+  const lanes=[];
+  participants.forEach((name,i)=>{
+    const lane=document.createElement('div'); lane.className='lane';
+    const nm=document.createElement('span'); nm.className='name'; nm.textContent=name;
+    const run=document.createElement('span'); run.className='runner'; run.textContent='🦄';
+    run.style.color=COLORS[i%COLORS.length];
+    run.style.filter=`drop-shadow(0 0 6px ${COLORS[i%COLORS.length]})`;
+    lane.appendChild(nm); lane.appendChild(run); track.appendChild(lane);
+    const rank=rankOf.get(i);
+    lanes.push({i,name,run,lane,
+      dur: 3600 + rank*Math.max(120,900/Math.sqrt(N)) + Math.random()*500, // finishers ordered by rank
+      wob: 0.6+Math.random()*0.9, phase:Math.random()*6.28, done:false});
+  });
+
+  const trackW = track.clientWidth;
+  const distance = trackW - 70; // px from start to finish line
+  const t0=performance.now();
+  let finishedOrder=[];
+
+  function frame(now){
+    const el=now-t0; let allDone=true;
+    for(const L of lanes){
+      let prog = el / L.dur;             // linear base preserves final order
+      if(prog>=1){ prog=1; if(!L.done){ L.done=true; finishedOrder.push(L.i);} }
+      else { allDone=false; }
+      // visual wobble (doesn't change finish order, fades out near end)
+      const wob = prog<0.97 ? Math.sin(el/170*L.wob + L.phase)*0.05*(1-prog) : 0;
+      const shown=Math.max(0,Math.min(1,prog+wob));
+      const x = -shown*distance;          // move left toward finish (RTL)
+      const hop = prog<1 ? Math.abs(Math.sin(el/90 + L.phase))*-4 : 0;
+      L.run.style.transform=`translate(${x}px, ${hop}px) scaleX(-1)`;
+    }
+    if(!allDone){ rafId=requestAnimationFrame(frame); }
+    else { finishRace(order, k, lanes); }
+  }
+  rafId=requestAnimationFrame(frame);
+}
+
+function finishRace(order,k,lanes){
+  const winners=order.slice(0,k).map(o=>o.name);
+  // highlight winning lanes
+  const winSet=new Set(order.slice(0,k).map(o=>o.i));
+  lanes.forEach(L=>{ if(winSet.has(L.i)) L.lane.classList.add('won'); });
+
+  setTimeout(()=>{
+    $('#raceCard').style.display='none';
+    $('#results').style.display='block';
+    $('#winnerBig').textContent = k===1 ? `🎉 ${winners[0]} 🎉` : `🎉 ${k} הזוכים 🎉`;
+    const podium=$('#podium'); podium.innerHTML='';
+    const medals=['🥇','🥈','🥉'];
+    winners.forEach((w,idx)=>{
+      const d=document.createElement('div'); d.className='place'+(idx===0?' p1':'');
+      d.innerHTML=`<span class="medal">${medals[idx]||'🏅'}</span><span class="pname"></span><span>🦄</span>`;
+      d.querySelector('.pname').textContent = `${idx+1}. ${w}`;
+      podium.appendChild(d);
+    });
+    burst();
+  }, 700);
+}
+
+$('#startBtn').onclick=startRace;
+$('#againBtn').onclick=()=>{ cancelAnimationFrame(rafId); startRace(); };
+$('#newBtn').onclick=()=>{
+  cancelAnimationFrame(rafId);
+  $('#results').style.display='none'; $('#raceCard').style.display='none';
+  $('#setupCard').style.display='block';
+};
+
+/* ---------- confetti ---------- */
+const cv=$('#confetti'), ctx=cv.getContext('2d');
+let parts=[], confRAF=null;
+function size(){ cv.width=innerWidth; cv.height=innerHeight; }
+addEventListener('resize',size); size();
+function burst(){
+  const cols=['#b567ff','#964bcc','#ffd86b','#ffffff','#4b0d87','#ff8fd1'];
+  parts=[];
+  for(let i=0;i<160;i++) parts.push({
+    x:innerWidth/2+(Math.random()-.5)*260, y:innerHeight*0.3,
+    vx:(Math.random()-.5)*9, vy:Math.random()*-11-4,
+    s:5+Math.random()*7, c:cols[i%cols.length], r:Math.random()*6, vr:(Math.random()-.5)*.4, life:1
+  });
+  if(confRAF) cancelAnimationFrame(confRAF);
+  loop();
+}
+function loop(){
+  ctx.clearRect(0,0,cv.width,cv.height);
+  let alive=false;
+  for(const p of parts){
+    p.vy+=0.28; p.x+=p.vx; p.y+=p.vy; p.r+=p.vr; p.life-=0.008;
+    if(p.life>0 && p.y<cv.height+40){ alive=true;
+      ctx.save(); ctx.globalAlpha=Math.max(0,p.life); ctx.translate(p.x,p.y); ctx.rotate(p.r);
+      ctx.fillStyle=p.c; ctx.fillRect(-p.s/2,-p.s/2,p.s,p.s*0.6); ctx.restore();
+    }
+  }
+  if(alive) confRAF=requestAnimationFrame(loop); else ctx.clearRect(0,0,cv.width,cv.height);
+}
+
+render();
+</script>
+</body>
+</html>
