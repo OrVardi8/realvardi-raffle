@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RealVardi · מירוץ ההגרלות</title>
 <link rel="icon" type="image/png" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;900&family=Heebo:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --p1:#964bcc; --p2:#4b0d87; --p3:#b567ff; --dark:#280d42; --ink:#171717; --white:#ffffff;
@@ -14,12 +17,13 @@
   body{
     font-family:"Heebo","Segoe UI",Arial,sans-serif; color:var(--white);
     background:radial-gradient(1200px 600px at 50% -10%, #3a1466 0%, var(--bg1) 55%, #0e0420 100%);
-    min-height:100vh; padding:24px 16px 60px;
+    min-height:100vh; padding:24px 16px 60px; overflow-x:hidden;
   }
   .wrap{max-width:1100px; margin:0 auto}
   header{display:flex; align-items:center; gap:16px; justify-content:center; margin-bottom:8px}
   header img{width:64px; height:64px; filter:drop-shadow(0 4px 14px rgba(181,103,255,.5))}
-  header h1{font-size:30px; font-weight:800; letter-spacing:.5px;
+  h1,.card h2,.btn,.winner-big,#raceTitle,.count-pill,.slider-val{font-family:"Rubik","Heebo",sans-serif}
+  header h1{font-size:30px; font-weight:900; letter-spacing:.5px;
     background:linear-gradient(90deg,#b567ff,#fff,#964bcc); -webkit-background-clip:text; background-clip:text; color:transparent}
   .sub{text-align:center; color:#cdb6e6; margin-bottom:26px; font-size:15px}
 
@@ -88,27 +92,27 @@
   .char-opt small{display:none}
 
   /* RACE */
-  #raceCard{display:none}
-  .track-scroll{max-height:64vh; overflow-y:auto; border-radius:14px}
-  .track{position:relative; direction:ltr;
-    background:linear-gradient(180deg,#20103f,#180a30);
-    border:1px solid rgba(181,103,255,.3); border-radius:14px; padding:8px 0; overflow:hidden}
+  #raceCard{display:none; width:100vw; max-width:100vw; margin-left:calc(50% - 50vw);
+    border-radius:0; padding:18px clamp(16px,4vw,70px)}
+  .track-scroll{border-radius:14px}
+  .track{position:relative; direction:ltr; border:1px solid rgba(181,103,255,.35);
+    border-radius:14px; overflow:hidden; box-shadow:inset 0 0 60px rgba(0,0,0,.35)}
+  .scene{position:absolute; inset:0; width:100%; height:100%; z-index:0}
   .startline{position:absolute; top:0; bottom:0; left:8px; width:6px; z-index:3;
-    background:repeating-linear-gradient(180deg,#b567ff 0 8px,#4b0d87 8px 16px); opacity:.7; border-radius:3px}
+    background:repeating-linear-gradient(180deg,#fff 0 8px,#b567ff 8px 16px); opacity:.65; border-radius:3px}
   .finish{position:absolute; top:0; bottom:0; right:10px; width:16px; z-index:3;
-    background:repeating-linear-gradient(45deg,#fff 0 8px,#171717 8px 16px); opacity:.9;
-    border-radius:3px; box-shadow:0 0 16px rgba(255,255,255,.45)}
+    background:repeating-linear-gradient(45deg,#fff 0 8px,#171717 8px 16px); opacity:.92;
+    border-radius:3px; box-shadow:0 0 16px rgba(255,255,255,.5)}
   .flag{position:absolute; right:6px; top:-2px; font-size:24px; z-index:4}
-  .lane{position:relative; height:66px; display:flex; align-items:center;
-    border-bottom:1px dashed rgba(181,103,255,.12)}
+  .lane{position:relative; display:flex; align-items:center; z-index:1;
+    border-bottom:1px solid rgba(255,255,255,.07)}
   .lane:last-child{border-bottom:none}
-  .lane.won{background:linear-gradient(90deg,transparent,rgba(255,216,107,.18),rgba(181,103,255,.35))}
-  .obstacle{position:absolute; bottom:6px; font-size:24px; z-index:1; opacity:.9; transform:translateX(-50%)}
-  .runner{position:absolute; left:6px; bottom:4px; z-index:2; text-align:center; will-change:transform}
-  .runner .char{font-size:42px; line-height:1; transform:scaleX(-1); display:inline-block;
-    filter:drop-shadow(0 3px 5px rgba(0,0,0,.55))}
-  .runner .rname{font-size:12px; color:#eadcff; text-shadow:0 1px 3px #000; margin-top:-2px;
-    direction:rtl; unicode-bidi:isolate; max-width:90px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .lane.won{background:linear-gradient(90deg,transparent,rgba(255,216,107,.28),rgba(181,103,255,.4))}
+  .runner{position:absolute; left:6px; bottom:1px; z-index:2; text-align:center; will-change:transform}
+  .runner .char{line-height:1; transform:scaleX(-1); display:inline-block;
+    filter:drop-shadow(0 2px 5px rgba(0,0,0,.75))}
+  .runner .rname{color:#fff; text-shadow:0 1px 4px #000, 0 0 6px #000; margin-top:-2px;
+    direction:rtl; unicode-bidi:isolate; max-width:110px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 
   .go-overlay{position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
     background:rgba(14,4,32,.55); backdrop-filter:blur(2px); z-index:10}
@@ -138,6 +142,17 @@
     font-size:14px; opacity:0; transition:.3s; z-index:50; pointer-events:none}
   .toast.show{opacity:1}
   canvas#confetti{position:fixed; inset:0; pointer-events:none; z-index:40}
+
+  /* accessibility & polish */
+  :focus-visible{outline:3px solid #ffd86b; outline-offset:3px; border-radius:8px}
+  .char-opt:focus-visible{outline-offset:2px}
+  .chip button{min-width:26px; min-height:26px; display:inline-flex; align-items:center; justify-content:center; border-radius:50%}
+  .chip button:hover{background:rgba(255,255,255,.12)}
+  .char-opt{outline:none}
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important}
+    .btn:hover,.char-opt:hover{transform:none}
+  }
 </style>
 </head>
 <body>
@@ -194,12 +209,6 @@
       </div>
       <div class="field" style="margin-top:14px">
         <label class="switch">
-          <input type="checkbox" id="obstaclesToggle" checked>
-          <span>🚧 מירוץ מכשולים — הדמויות קופצות מעל מכשולים</span>
-        </label>
-      </div>
-      <div class="field" style="margin-top:14px">
-        <label class="switch">
           <input type="checkbox" id="soundToggle" checked>
           <span>🔊 צלילים — ספירה לאחור, זינוק וניצחון</span>
         </label>
@@ -215,9 +224,79 @@
 
   <!-- RACE -->
   <div class="card" id="raceCard">
-    <h2 id="raceTitle">🚦 המתחרים בעמדות...</h2>
+    <div class="row" style="justify-content:space-between; align-items:center; margin-bottom:14px">
+      <h2 id="raceTitle" style="margin:0">🚦 המתחרים בעמדות...</h2>
+      <button class="btn btn-ghost" id="muteBtn" style="padding:8px 13px" title="צלילים">🔊</button>
+    </div>
     <div class="track-scroll">
       <div class="track" id="track">
+        <svg class="scene" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#2a0d4d"/><stop offset=".4" stop-color="#7a2a8f"/>
+              <stop offset=".68" stop-color="#d4568a"/><stop offset=".84" stop-color="#ff9e6b"/>
+              <stop offset="1" stop-color="#ffd6a0"/>
+            </linearGradient>
+            <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#3a1a55"/><stop offset="1" stop-color="#1c0c30"/>
+            </linearGradient>
+            <radialGradient id="sun" cx="50%" cy="50%" r="50%">
+              <stop offset="0" stop-color="#fff3c4"/><stop offset=".6" stop-color="#ffd27a"/>
+              <stop offset="1" stop-color="#ff9e5e" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <rect width="1000" height="600" fill="url(#sky)"/>
+          <circle cx="500" cy="350" r="130" fill="url(#sun)"/>
+          <circle cx="500" cy="350" r="62" fill="#fff1c0" opacity=".95"/>
+          <!-- distant hills -->
+          <path d="M0,360 Q200,290 430,345 T1000,330 L1000,470 L0,470 Z" fill="#6a2f7e" opacity=".85"/>
+          <path d="M0,400 Q260,330 560,395 T1000,380 L1000,470 L0,470 Z" fill="#4a1f63"/>
+          <!-- HOLLYWOOD sign on the left hill -->
+          <g transform="translate(150,300) rotate(-4)" fill="#ffffff" opacity=".95"
+             font-family="Arial, sans-serif" font-weight="900" font-size="30" letter-spacing="2">
+            <text x="0" y="0">HOLLYWOOD</text>
+          </g>
+          <!-- foreground ground -->
+          <rect x="0" y="455" width="1000" height="145" fill="url(#ground)"/>
+          <!-- palm trees -->
+          <g fill="#160826">
+            <!-- left palm -->
+            <g transform="translate(95,470) scale(1.15)">
+              <path d="M-4,0 Q-12,-70 6,-135 Q14,-70 6,0 Z"/>
+              <g transform="translate(5,-135)">
+                <path d="M0,0 Q-45,-12 -78,-34 Q-40,-4 0,0 Z"/>
+                <path d="M0,0 Q-30,-32 -40,-74 Q-8,-34 0,0 Z"/>
+                <path d="M0,0 Q-6,-44 8,-82 Q14,-40 0,0 Z"/>
+                <path d="M0,0 Q34,-30 44,-72 Q12,-32 0,0 Z"/>
+                <path d="M0,0 Q48,-12 80,-34 Q42,-4 0,0 Z"/>
+              </g>
+            </g>
+            <!-- right palm -->
+            <g transform="translate(915,470) scale(1.3)">
+              <path d="M-4,0 Q-14,-78 6,-150 Q16,-78 6,0 Z"/>
+              <g transform="translate(5,-150)">
+                <path d="M0,0 Q-50,-14 -86,-38 Q-44,-4 0,0 Z"/>
+                <path d="M0,0 Q-32,-36 -44,-82 Q-8,-38 0,0 Z"/>
+                <path d="M0,0 Q-6,-50 8,-92 Q16,-44 0,0 Z"/>
+                <path d="M0,0 Q38,-34 50,-80 Q12,-36 0,0 Z"/>
+                <path d="M0,0 Q52,-14 88,-38 Q46,-4 0,0 Z"/>
+              </g>
+            </g>
+            <!-- small mid palm -->
+            <g transform="translate(770,468) scale(.8)">
+              <path d="M-3,0 Q-10,-60 5,-115 Q12,-60 5,0 Z"/>
+              <g transform="translate(4,-115)">
+                <path d="M0,0 Q-40,-10 -68,-30 Q-34,-3 0,0 Z"/>
+                <path d="M0,0 Q-24,-28 -34,-64 Q-6,-30 0,0 Z"/>
+                <path d="M0,0 Q-4,-40 8,-72 Q12,-34 0,0 Z"/>
+                <path d="M0,0 Q30,-26 40,-62 Q10,-28 0,0 Z"/>
+                <path d="M0,0 Q42,-10 70,-30 Q36,-3 0,0 Z"/>
+              </g>
+            </g>
+          </g>
+          <!-- ground sheen toward finish -->
+          <rect x="0" y="455" width="1000" height="145" fill="#000000" opacity=".18"/>
+        </svg>
         <div class="startline"></div>
         <div class="finish"></div>
         <div class="flag">🏁</div>
@@ -280,8 +359,12 @@ function buildCharGrid(){
     const d=document.createElement('div');
     d.className='char-opt'+(c===selectedChar?' sel':'');
     d.textContent = c==='mix' ? '🎲' : c;
+    d.tabIndex=0; d.setAttribute('role','radio'); d.setAttribute('aria-checked', c===selectedChar?'true':'false');
+    d.setAttribute('aria-label', c==='mix' ? 'ערבב — דמות אקראית לכל מתחרה' : ('דמות '+c));
     d.title = c==='mix' ? 'ערבב — דמות אקראית לכל מתחרה' : '';
-    d.onclick=()=>{ selectedChar=c; buildCharGrid(); };
+    const choose=()=>{ selectedChar=c; buildCharGrid(); };
+    d.onclick=choose;
+    d.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); choose(); } };
     g.appendChild(d);
   });
 }
@@ -333,13 +416,13 @@ function pickChar(){ return CHARACTERS[Math.floor(rand(CHARACTERS.length))]; }
 /* ---------- the race ---------- */
 const COLORS=['#b567ff','#964bcc','#ffd86b','#ff8fd1','#6bd5ff','#7CFFB2','#ff9d6b','#c0a6ff'];
 let rafId=null, raceState=null;
-const OBSTACLE_FRACS=[0.28,0.52,0.76];
+
+function syncMute(){ const b=$('#muteBtn'); if(b) b.textContent=soundOn()?'🔊':'🔇'; }
 
 function buildRace(){
   let k=parseInt($('#winnersCount').value)||1;
   k=Math.max(1,Math.min(k,participants.length)); $('#winnersCount').value=k;
   const durSec=parseInt($('#durSlider').value)||8;
-  const obstaclesOn=$('#obstaclesToggle').checked;
 
   const order=shuffle(participants.map((name,i)=>({name,i})));
   const rankOf=new Map(); order.forEach((o,r)=>rankOf.set(o.i,r));
@@ -351,30 +434,35 @@ function buildRace(){
   $('#raceTitle').textContent='🚦 המתחרים בעמדות...';
   $('#goOverlay').style.display='flex';
   $('#countdown').style.display='none';
+  syncMute();
 
   const track=$('#track');
   track.querySelectorAll('.lane').forEach(l=>l.remove());
-  const distance=track.clientWidth-90;
+
+  // compact: squeeze all lanes into ~55% of the screen height — no scrolling
+  const maxTrackPx=Math.max(200, Math.min(window.innerHeight*0.55, 540));
+  const laneH=Math.max(20, Math.min(64, Math.floor(maxTrackPx/N)));
+  const charPx=Math.round(Math.max(15, Math.min(40, laneH*0.62)));
+  const namePx=laneH<30?10:12;
+  const showName=laneH>=18;
+
   const lanes=[];
   participants.forEach((name,i)=>{
-    const lane=document.createElement('div'); lane.className='lane';
-    if(obstaclesOn){
-      OBSTACLE_FRACS.forEach(f=>{ const ob=document.createElement('div'); ob.className='obstacle';
-        ob.textContent='🚧'; ob.style.left=(6+21+f*distance)+'px'; lane.appendChild(ob); });
-    }
+    const lane=document.createElement('div'); lane.className='lane'; lane.style.height=laneH+'px';
     const ch = selectedChar==='mix' ? pickChar() : selectedChar;
     const run=document.createElement('div'); run.className='runner';
     run.innerHTML=`<div class="char"></div><div class="rname"></div>`;
-    run.querySelector('.char').textContent=ch;
-    run.querySelector('.char').style.filter=`drop-shadow(0 0 7px ${COLORS[i%COLORS.length]})`;
-    run.querySelector('.rname').textContent=name;
+    const cEl=run.querySelector('.char'); cEl.textContent=ch; cEl.style.fontSize=charPx+'px';
+    cEl.style.filter=`drop-shadow(0 0 6px ${COLORS[i%COLORS.length]})`;
+    const nEl=run.querySelector('.rname'); nEl.textContent=name; nEl.style.fontSize=namePx+'px';
+    nEl.style.display=showName?'block':'none';
     lane.appendChild(run); track.appendChild(lane);
     const rank=rankOf.get(i);
-    lanes.push({i,name,ch,run, lane,
+    lanes.push({i,name,ch,run,lane,
       dur: baseTime*(1 + rank*(0.45/Math.max(1,N))) + rand(220),
       wob:0.5+rand(0.9), phase:rand(6.28), done:false});
   });
-  raceState={order,k,lanes,obstaclesOn,started:false,firstCrossAt:null};
+  raceState={order,k,lanes,started:false,firstCrossAt:null};
 }
 
 function go(){
@@ -411,13 +499,8 @@ function runAnimation(){
       const wob = prog<0.96 ? Math.sin(el/170*L.wob+L.phase)*0.045*(1-prog) : 0;
       const shown=Math.max(0,Math.min(1,prog+wob));
       const x=shown*distance;            // move right (LTR)
-      let jump=0;
-      if(raceState.obstaclesOn && prog<1){
-        for(const f of OBSTACLE_FRACS){ const d=Math.abs(prog-f);
-          if(d<0.06){ const h=Math.sin((1-d/0.06)*Math.PI/2)*30; if(h>jump) jump=h; } }
-      }
       const bob = prog<1 ? Math.abs(Math.sin(el/85+L.phase))*4 : 0;
-      L.run.style.transform=`translate(${x}px, ${-(jump+bob)}px)`;
+      L.run.style.transform=`translate(${x}px, ${-bob}px)`;
       if(prog>=1 && !L.done){
         L.done=true;
         if(raceState.firstCrossAt===null){     // the winner just crossed
@@ -466,6 +549,8 @@ function finishRace(order,k,lanes){
 
 $('#startBtn').onclick=buildRace;
 $('#goBtn').onclick=go;
+$('#muteBtn').onclick=()=>{ const t=$('#soundToggle'); t.checked=!t.checked; syncMute(); };
+$('#soundToggle').addEventListener('change',syncMute);
 $('#cancelRace').onclick=()=>{ cancelAnimationFrame(rafId); raceState=null;
   $('#raceCard').style.display='none'; $('#setupCard').style.display='block'; };
 $('#againBtn').onclick=()=>{ cancelAnimationFrame(rafId); buildRace(); };
@@ -476,6 +561,7 @@ $('#newBtn').onclick=()=>{ cancelAnimationFrame(rafId); raceState=null;
 const cv=$('#confetti'), ctx=cv.getContext('2d'); let parts=[], confRAF=null;
 function size(){ cv.width=innerWidth; cv.height=innerHeight; } addEventListener('resize',size); size();
 function burst(){
+  if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const cols=['#b567ff','#964bcc','#ffd86b','#ffffff','#4b0d87','#ff8fd1']; parts=[];
   for(let i=0;i<170;i++) parts.push({ x:innerWidth/2+(Math.random()-.5)*280, y:innerHeight*0.3,
     vx:(Math.random()-.5)*9, vy:Math.random()*-11-4, s:5+Math.random()*7, c:cols[i%cols.length],
