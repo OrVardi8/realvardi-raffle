@@ -131,6 +131,10 @@
     border-radius:0; padding:18px clamp(16px,4vw,70px); background:transparent; border:none; box-shadow:none; backdrop-filter:none}
   #raceCard::before{display:none}
   .track-scroll{border-radius:16px}
+  #raceCard:fullscreen{height:100vh; width:100vw; margin:0; overflow:hidden;
+    padding:12px clamp(12px,3vw,44px); background:linear-gradient(180deg,#160b30,#070317)}
+  #raceCard:-webkit-full-screen{height:100vh; width:100vw; margin:0; overflow:hidden;
+    padding:12px clamp(12px,3vw,44px); background:linear-gradient(180deg,#160b30,#070317)}
   .track{position:relative; direction:ltr; border:1px solid rgba(181,103,255,.55); border-radius:16px; overflow:hidden;
     padding-top:28px;   /* headroom so the top racer's head isn't clipped */
     box-shadow:0 0 0 1px rgba(255,95,206,.22), 0 0 46px rgba(181,103,255,.4), inset 0 0 80px rgba(0,0,0,.4)}
@@ -254,7 +258,7 @@
         </label>
       </div>
       <div class="field" style="margin-top:14px">
-        <label>בחר דמות לכל המתחרים</label>
+        <label>בחר דמות — או 🎲 לתחפושת שונה לכל מתחרה</label>
         <div class="char-grid" id="charGrid"></div>
       </div>
     </div>
@@ -266,7 +270,10 @@
   <div class="card" id="raceCard">
     <div class="row" style="justify-content:space-between; align-items:center; margin-bottom:14px">
       <h2 id="raceTitle" style="margin:0">🚦 המתחרים בעמדות...</h2>
-      <button class="btn btn-ghost" id="muteBtn" style="padding:8px 13px" title="צלילים">🔊</button>
+      <div class="row" style="gap:8px">
+        <button class="btn btn-ghost" id="fsBtn" style="padding:8px 13px" title="מסך מלא">⛶ מסך מלא</button>
+        <button class="btn btn-ghost" id="muteBtn" style="padding:8px 13px" title="צלילים">🔊</button>
+      </div>
     </div>
     <div class="track-scroll">
       <div class="track" id="track">
@@ -410,8 +417,8 @@ function sndFanfare(){ [523,659,784,1046].forEach((f,i)=>tone(f,i*0.13,0.32,'squ
   tone(1318,0.52,0.7,'sawtooth',0.16); }
 
 /* ---------- characters ---------- */
-const CHARACTERS = ['🦄','🐎','🐇','🐢','🐆','🦊','🐅','🐉','🦖','🐸','🐶','🐱','🦅','🐌','🐝','🦔','🦘','🐧','🦩','🚀','🏎️','🛼'];
-let selectedChar = '🦄'; // or 'mix'
+const CHARACTERS = ['🦄','🐎','🦓','🦌','🐕','🐈','🦊','🐅','🐆','🦁','🐯','🐺','🐗','🐮','🐷','🐰','🐹','🐭','🐻','🐼','🐨','🐵','🦍','🐘','🦏','🦛','🐪','🦙','🦒','🐐','🐔','🦃','🦆','🦅','🦉','🦜','🦚','🐢','🐍','🦖','🦕','🐙','🦀','🐠','🐡','🐬','🐳','🦈','🐊','🐉','🐲','🦋','🐝','🐞','🐌','🚀','🏎️','🏍️','🚲','🛹','🛼','⛵','🚁','👾','🤖','🎃','👻','🧙','🧚','🦸','🤡'];
+let selectedChar = 'mix'; // 'mix' = different costume for each racer (default), or a single emoji
 function buildCharGrid(){
   const g=$('#charGrid'); g.innerHTML='';
   const opts=['mix',...CHARACTERS];
@@ -420,8 +427,8 @@ function buildCharGrid(){
     d.className='char-opt'+(c===selectedChar?' sel':'');
     d.textContent = c==='mix' ? '🎲' : c;
     d.tabIndex=0; d.setAttribute('role','radio'); d.setAttribute('aria-checked', c===selectedChar?'true':'false');
-    d.setAttribute('aria-label', c==='mix' ? 'ערבב — דמות אקראית לכל מתחרה' : ('דמות '+c));
-    d.title = c==='mix' ? 'ערבב — דמות אקראית לכל מתחרה' : '';
+    d.setAttribute('aria-label', c==='mix' ? 'תחפושת שונה לכל מתחרה' : ('דמות '+c));
+    d.title = c==='mix' ? 'תחפושת שונה לכל מתחרה' : '';
     const choose=()=>{ selectedChar=c; buildCharGrid(); };
     d.onclick=choose;
     d.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); choose(); } };
@@ -487,6 +494,17 @@ const COLORS=['#b567ff','#ff5fce','#ffd86b','#ff8fd1','#22d3ee','#7CFFB2','#ff9d
 let rafId=null, raceState=null;
 
 function syncMute(){ const b=$('#muteBtn'); if(b) b.textContent=soundOn()?'🔊':'🔇'; }
+function setHeaderHidden(h){
+  const hd=document.querySelector('header'), sb=document.querySelector('.sub');
+  if(hd) hd.style.display = h?'none':'flex';
+  if(sb) sb.style.display = h?'none':'block';
+}
+function exitFS(){ if(document.fullscreenElement && document.exitFullscreen) document.exitFullscreen(); }
+function toggleFullscreen(){
+  const el=$('#raceCard');
+  if(!document.fullscreenElement){ const r=el.requestFullscreen||el.webkitRequestFullscreen; if(r) r.call(el); }
+  else exitFS();
+}
 
 function buildRace(){
   let k=parseInt($('#winnersCount').value)||1;
@@ -511,44 +529,58 @@ function buildRace(){
   $('#goOverlay').style.display='flex';
   $('#countdown').style.display='none';
   syncMute();
-  window.scrollTo(0,0);            // anchor to top so the measurement below is correct
+  setHeaderHidden(true);           // free the whole screen for the race
+  window.scrollTo(0,0);
 
   const track=$('#track');
   track.querySelectorAll('.lane').forEach(l=>l.remove());
 
-  // Size lanes so the WHOLE race fits in ONE screen — never scroll.
-  // Characters stay a fixed 40px, so when there are many participants they simply
-  // overlap a little (that's fine). We measure the real space left below the track top.
-  const topY = track.getBoundingClientRect().top;
-  const usable = Math.max(150, window.innerHeight - topY - 84);  // 84 ≈ back button + margins
-  const laneH = Math.max(1, Math.min(58, (usable - 28) / N));  // sub-pixel ok; total always fits the screen
-  // characters shrink with the lanes so even ~300 racers fit on one screen (duck-race swarm style)
-  const charPx = Math.round(Math.max(12, Math.min(40, laneH*1.5)));
-  const namePx = laneH>=30 ? 12 : (laneH>=22 ? 11 : (laneH>=14 ? 9 : 0)); // 0 ⇒ no room, hide names
-  const showName = namePx>0;
-  const glow = N<=80;              // skip per-character glow when very crowded (clarity + performance)
-
+  // each racer gets a DIFFERENT costume (shuffled pool) unless one character was chosen
+  const pool = shuffle(CHARACTERS);
   const charByIdx=new Map();
   const lanes=[];
   racers.forEach((r,idx)=>{
-    const name=r.name;
-    const lane=document.createElement('div'); lane.className='lane'; lane.style.height=laneH+'px';
-    const ch = selectedChar==='mix' ? pickChar() : selectedChar;
+    const lane=document.createElement('div'); lane.className='lane';
+    const ch = selectedChar==='mix' ? pool[idx % pool.length] : selectedChar;
     charByIdx.set(idx, ch);
     const run=document.createElement('div'); run.className='runner';
     run.innerHTML=`<div class="char"></div><div class="rname"></div>`;
-    const cEl=run.querySelector('.char'); cEl.textContent=ch; cEl.style.fontSize=charPx+'px';
-    if(glow) cEl.style.filter=`drop-shadow(0 0 6px ${COLORS[idx%COLORS.length]})`;
-    const nEl=run.querySelector('.rname'); nEl.textContent=name;
-    if(showName){ nEl.style.fontSize=namePx+'px'; } else { nEl.style.display='none'; }
+    run.querySelector('.char').textContent=ch;
+    run.querySelector('.rname').textContent=r.name;
     lane.appendChild(run); track.appendChild(lane);
     const rank=rankOf.get(idx);
-    lanes.push({idx, pi:r.pi, name, ch, run, lane,
-      dur: baseTime*(1 + rank*(0.45/Math.max(1,N))) + rand(220),
-      wob:0.5+rand(0.9), phase:rand(6.28), done:false});
+    lanes.push({idx, pi:r.pi, name:r.name, ch, run, lane,
+      dur: baseTime*(1 + rank*(0.5/Math.max(1,N))) + rand(220),
+      phase:rand(6.28), done:false});
   });
   winners.forEach(w=> w.ch=charByIdx.get(w.idx));
-  raceState={winners,lanes,started:false,firstCrossAt:null};
+  raceState={winners,lanes,started:false,firstCrossAt:null,bobAmp:0,distance:0};
+  sizeRace();                      // size lanes / characters / names to fill the screen
+}
+
+// Size the track to fill the available screen (or the fullscreen viewport).
+// Characters shrink as the crowd grows so everyone fits on one screen.
+function sizeRace(){
+  if(!raceState) return;
+  const track=$('#track');
+  const N=raceState.lanes.length; if(!N) return;
+  const fs=document.fullscreenElement;
+  const topY=track.getBoundingClientRect().top;
+  const usable=Math.max(150, window.innerHeight - topY - (fs?22:80));
+  const laneH=Math.max(1, Math.min(64, (usable-28)/N));   // sub-pixel ok; total always fits
+  const charPx=Math.round(Math.max(12, Math.min(50, laneH*1.5)));
+  const namePx = laneH>=26 ? 13 : (laneH>=18 ? 11 : (laneH>=11 ? 9 : (laneH>=7 ? 7 : 0)));
+  const glow = N<=80;
+  raceState.bobAmp = charPx>=26 ? 3 : 0;
+  raceState.distance = track.clientWidth - Math.max(44, charPx+20);
+  raceState.lanes.forEach(L=>{
+    L.lane.style.height=laneH+'px';
+    const cEl=L.run.querySelector('.char'); cEl.style.fontSize=charPx+'px';
+    cEl.style.filter = glow ? `drop-shadow(0 0 6px ${COLORS[L.idx%COLORS.length]})` : 'none';
+    const nEl=L.run.querySelector('.rname');
+    if(namePx>0){ nEl.style.display='inline-block'; nEl.style.fontSize=namePx+'px'; }
+    else nEl.style.display='none';
+  });
 }
 
 function go(){
@@ -573,19 +605,17 @@ function go(){
 function runAnimation(){
   $('#raceTitle').textContent='🏁 המירוץ בעיצומו...';
   const {lanes}=raceState;
-  const track=$('#track');
-  const distance=track.clientWidth-90;   // left(start) -> right(finish)
-  raceState.distance=distance;
+  sizeRace();                            // ensure distance & sizes match the current screen
   const t0=performance.now();
 
   function frame(now){
     const el=now-t0;
+    const distance=raceState.distance;   // read live so fullscreen / resize works mid-race
+    const bobAmp=raceState.bobAmp;
     for(const L of lanes){
       let prog=el/L.dur; if(prog>1) prog=1;
-      const wob = prog<0.96 ? Math.sin(el/170*L.wob+L.phase)*0.045*(1-prog) : 0;
-      const shown=Math.max(0,Math.min(1,prog+wob));
-      const x=shown*distance;            // move right (LTR)
-      const bob = prog<1 ? Math.abs(Math.sin(el/85+L.phase))*4 : 0;
+      const x=prog*distance;             // pure forward motion, left → right (no jitter)
+      const bob = (bobAmp && prog<1) ? Math.abs(Math.sin(el/150+L.phase))*bobAmp : 0;
       L.run.style.transform=`translate(${x}px, ${-bob}px)`;
       if(prog>=1 && !L.done){
         L.done=true;
@@ -618,6 +648,7 @@ function finishRace(){
   const winPis=new Set(winners.map(w=>w.pi));
   lanes.forEach(L=>{ if(winPis.has(L.pi)) L.lane.classList.add('won'); });
   const k=winners.length;
+  exitFS(); setHeaderHidden(false);
   $('#raceCard').style.display='none';
   $('#results').style.display='block';
   window.scrollTo({top:0, behavior:'smooth'});
@@ -638,10 +669,16 @@ $('#startBtn').onclick=buildRace;
 $('#goBtn').onclick=go;
 $('#muteBtn').onclick=()=>{ const t=$('#soundToggle'); t.checked=!t.checked; syncMute(); };
 $('#soundToggle').addEventListener('change',syncMute);
-$('#cancelRace').onclick=()=>{ cancelAnimationFrame(rafId); raceState=null;
+$('#fsBtn').onclick=toggleFullscreen;
+document.addEventListener('fullscreenchange',()=>{
+  const b=$('#fsBtn'); if(b) b.textContent=document.fullscreenElement?'🗗 צא ממסך מלא':'⛶ מסך מלא';
+  sizeRace();
+});
+window.addEventListener('resize',()=>{ if(raceState) sizeRace(); });
+$('#cancelRace').onclick=()=>{ cancelAnimationFrame(rafId); exitFS(); setHeaderHidden(false); raceState=null;
   $('#raceCard').style.display='none'; $('#setupCard').style.display='block'; };
 $('#againBtn').onclick=()=>{ cancelAnimationFrame(rafId); buildRace(); };
-$('#newBtn').onclick=()=>{ cancelAnimationFrame(rafId); raceState=null;
+$('#newBtn').onclick=()=>{ cancelAnimationFrame(rafId); exitFS(); setHeaderHidden(false); raceState=null;
   $('#results').style.display='none'; $('#raceCard').style.display='none'; $('#setupCard').style.display='block'; };
 
 /* ---------- confetti ---------- */
