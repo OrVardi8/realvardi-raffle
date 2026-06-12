@@ -10,158 +10,190 @@
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;900&family=Heebo:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --p1:#964bcc; --p2:#4b0d87; --p3:#b567ff; --dark:#280d42; --ink:#171717; --white:#ffffff;
-    --bg1:#1a0833;
+    --p1:#964bcc; --p2:#4b0d87; --p3:#b567ff; --neon:#b567ff;
+    --cyan:#22d3ee; --pink:#ff5fce; --gold:#ffd86b;
+    --bg0:#070317; --bg1:#140a2e;
+    --surface:rgba(255,255,255,.045); --surface2:rgba(255,255,255,.08);
+    --border:rgba(181,103,255,.22);
+    --text:#f3ecff; --muted:#bfa9e6; --faint:#9b86c4; --radius:18px;
   }
   *{box-sizing:border-box; margin:0; padding:0}
   body{
-    font-family:"Heebo","Segoe UI",Arial,sans-serif; color:var(--white);
-    background:radial-gradient(1200px 600px at 50% -10%, #3a1466 0%, var(--bg1) 55%, #0e0420 100%);
-    min-height:100vh; padding:24px 16px 60px; overflow-x:hidden;
+    font-family:"Heebo","Segoe UI",Arial,sans-serif; color:var(--text); position:relative;
+    background:
+      radial-gradient(900px 520px at 82% -6%, rgba(255,95,206,.20), transparent 60%),
+      radial-gradient(1000px 600px at 12% 2%, rgba(34,211,238,.13), transparent 55%),
+      linear-gradient(180deg,#160b30 0%, #0b0520 52%, #070317 100%);
+    background-attachment:fixed; min-height:100dvh; padding:28px 16px 70px; overflow-x:hidden;
   }
-  .wrap{max-width:1100px; margin:0 auto}
-  header{display:flex; align-items:center; gap:16px; justify-content:center; margin-bottom:8px}
-  header img{width:64px; height:64px; filter:drop-shadow(0 4px 14px rgba(181,103,255,.5))}
-  h1,.card h2,.btn,.winner-big,#raceTitle,.count-pill,.slider-val{font-family:"Rubik","Heebo",sans-serif}
-  header h1{font-size:30px; font-weight:900; letter-spacing:.5px;
-    background:linear-gradient(90deg,#b567ff,#fff,#964bcc); -webkit-background-clip:text; background-clip:text; color:transparent}
-  .sub{text-align:center; color:#cdb6e6; margin-bottom:26px; font-size:15px}
+  body::before{content:""; position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.5;
+    mix-blend-mode:overlay;
+    background:repeating-linear-gradient(0deg, rgba(255,255,255,.03) 0 1px, transparent 1px 3px)}
+  .bg-fx{position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden}
+  .blob{position:absolute; border-radius:50%; filter:blur(72px); opacity:.5; mix-blend-mode:screen}
+  .b1{width:440px;height:440px;background:#7a2bd6;top:-90px;left:-70px;animation:drift1 19s ease-in-out infinite}
+  .b2{width:400px;height:400px;background:#ff5fce;bottom:-120px;right:-50px;animation:drift2 23s ease-in-out infinite}
+  .b3{width:340px;height:340px;background:#22d3ee;top:42%;left:56%;opacity:.3;animation:drift3 27s ease-in-out infinite}
+  @keyframes drift1{0%,100%{transform:translate(0,0)}50%{transform:translate(60px,40px)}}
+  @keyframes drift2{0%,100%{transform:translate(0,0)}50%{transform:translate(-50px,-30px)}}
+  @keyframes drift3{0%,100%{transform:translate(0,0)}50%{transform:translate(-40px,30px)}}
 
-  .card{
-    background:linear-gradient(180deg, rgba(75,13,135,.45), rgba(40,13,66,.6));
-    border:1px solid rgba(181,103,255,.28); border-radius:18px; padding:22px;
-    box-shadow:0 10px 40px rgba(0,0,0,.35); margin-bottom:22px; backdrop-filter:blur(4px);
-  }
-  .card h2{font-size:18px; margin-bottom:14px; color:#e6d4ff; display:flex; align-items:center; gap:8px}
+  .wrap{position:relative; z-index:1; max-width:1080px; margin:0 auto}
+  header{display:flex; flex-direction:column; align-items:center; gap:10px; margin-bottom:8px}
+  header img{width:76px; height:76px; filter:drop-shadow(0 0 20px rgba(181,103,255,.85))}
+  h1,.card h2,.btn,.winner-big,#raceTitle,.count-pill,.slider-val,.badge{font-family:"Rubik","Heebo",sans-serif}
+  header h1{font-size:clamp(28px,5.2vw,42px); font-weight:900; letter-spacing:.5px; line-height:1.04; text-align:center;
+    background:linear-gradient(92deg,#b567ff,#ffffff 46%,#ff5fce); -webkit-background-clip:text; background-clip:text; color:transparent;
+    text-shadow:0 0 34px rgba(181,103,255,.3)}
+  .badge{display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:#ecdfff;
+    background:var(--surface2); border:1px solid var(--border); padding:7px 15px; border-radius:999px;
+    box-shadow:0 0 22px rgba(181,103,255,.18)}
+  .sub{text-align:center; color:var(--muted); margin:6px 0 26px; font-size:15px}
+
+  .card{position:relative; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:22px; margin-bottom:20px; backdrop-filter:blur(14px) saturate(120%);
+    box-shadow:0 18px 50px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.08)}
+  .card::before{content:""; position:absolute; inset:0; border-radius:var(--radius); padding:1px; pointer-events:none;
+    background:linear-gradient(135deg, rgba(181,103,255,.55), transparent 38%, transparent 62%, rgba(255,95,206,.4));
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor; mask-composite:exclude}
+  .card h2{font-size:18px; font-weight:700; margin-bottom:14px; color:#efe6ff; display:flex; align-items:center; gap:9px}
 
   .grid{display:grid; grid-template-columns:1fr 1fr; gap:18px}
   @media(max-width:760px){.grid{grid-template-columns:1fr}}
 
-  label{display:block; font-size:13px; color:#cdb6e6; margin-bottom:6px}
+  label{display:block; font-size:13px; color:var(--muted); margin-bottom:6px}
   textarea,input[type=number]{
-    width:100%; background:rgba(14,4,32,.6); border:1px solid rgba(181,103,255,.3);
-    color:#fff; border-radius:12px; padding:11px 13px; font-size:15px; font-family:inherit; resize:vertical;
-  }
+    width:100%; background:rgba(8,4,20,.55); border:1px solid var(--border);
+    color:#fff; border-radius:12px; padding:11px 13px; font-size:15px; font-family:inherit; resize:vertical}
   textarea{min-height:120px; line-height:1.7}
-  textarea:focus,input:focus{outline:none; border-color:var(--p3); box-shadow:0 0 0 3px rgba(181,103,255,.25)}
+  textarea:focus,input:focus{outline:none; border-color:var(--p3); box-shadow:0 0 0 3px rgba(181,103,255,.28), 0 0 18px rgba(181,103,255,.25)}
 
-  .btn{border:none; cursor:pointer; font-family:inherit; font-weight:700; font-size:15px;
-    border-radius:12px; padding:12px 18px; transition:transform .12s, box-shadow .2s, opacity .2s; color:#fff}
+  .btn{position:relative; border:none; cursor:pointer; font-weight:700; font-size:15px; overflow:hidden;
+    border-radius:13px; padding:12px 18px; color:#fff; transition:transform .15s ease, box-shadow .25s ease}
   .btn:hover{transform:translateY(-2px)}
   .btn:active{transform:translateY(0)}
-  .btn-primary{background:linear-gradient(135deg,var(--p3),var(--p2)); box-shadow:0 8px 24px rgba(150,75,204,.45)}
-  .btn-ghost{background:rgba(181,103,255,.14); border:1px solid rgba(181,103,255,.35)}
+  .btn-primary{background:linear-gradient(135deg,#ff5fce,#b567ff 55%,#7a2bd6);
+    box-shadow:0 8px 26px rgba(181,103,255,.5), inset 0 0 0 1px rgba(255,255,255,.1)}
+  .btn-primary:hover{box-shadow:0 10px 36px rgba(255,95,206,.6), 0 0 24px rgba(181,103,255,.5)}
+  .btn-primary::after{content:""; position:absolute; top:0; left:-60%; width:40%; height:100%;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent); transform:skewX(-20deg); transition:left .6s}
+  .btn-primary:hover::after{left:130%}
+  .btn-ghost{background:var(--surface2); border:1px solid var(--border); color:#efe6ff}
+  .btn-ghost:hover{background:rgba(181,103,255,.18); box-shadow:0 0 18px rgba(181,103,255,.28)}
   .btn-lg{font-size:20px; padding:16px 28px; width:100%}
-  .btn:disabled{opacity:.45; cursor:not-allowed; transform:none}
+  .btn:disabled{opacity:.4; cursor:not-allowed; transform:none; box-shadow:none}
+  .btn:disabled::after{display:none}
   .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
 
-  .filebox{border:2px dashed rgba(181,103,255,.45); border-radius:14px; padding:24px; text-align:center;
-    cursor:pointer; transition:.2s; background:rgba(14,4,32,.35)}
-  .filebox:hover,.filebox.drag{background:rgba(181,103,255,.12); border-color:var(--p3)}
-  .filebox .big{font-size:30px; margin-bottom:6px}
-  .filebox small{color:#a98fd0}
+  .filebox{border:2px dashed rgba(181,103,255,.5); border-radius:14px; padding:24px; text-align:center;
+    cursor:pointer; transition:.2s; background:rgba(8,4,20,.35)}
+  .filebox:hover,.filebox.drag{background:rgba(181,103,255,.14); border-color:var(--p3); box-shadow:0 0 22px rgba(181,103,255,.25) inset}
+  .filebox .big{font-size:32px; margin-bottom:6px; filter:drop-shadow(0 0 10px rgba(181,103,255,.6))}
+  .filebox small{color:var(--faint)}
 
-  .count-pill{background:var(--p2); border:1px solid rgba(181,103,255,.5); border-radius:999px;
-    padding:4px 12px; font-size:13px; font-weight:700}
+  .count-pill{background:linear-gradient(135deg,var(--p3),var(--p2)); border:1px solid rgba(255,255,255,.18);
+    border-radius:999px; padding:4px 13px; font-size:13px; font-weight:700; box-shadow:0 0 16px rgba(181,103,255,.4)}
   .chips{display:flex; flex-wrap:wrap; gap:8px; max-height:180px; overflow:auto; margin-top:14px}
-  .chip{background:rgba(150,75,204,.25); border:1px solid rgba(181,103,255,.4); border-radius:999px;
-    padding:5px 10px 5px 12px; font-size:14px; display:flex; align-items:center; gap:7px}
-  .chip button{background:none; border:none; color:#e6b8ff; cursor:pointer; font-size:16px; line-height:1; padding:0}
-  .chip button:hover{color:#fff}
+  .chip{background:var(--surface2); border:1px solid var(--border); border-radius:999px;
+    padding:5px 8px 5px 12px; font-size:14px; display:flex; align-items:center; gap:7px}
+  .chip button{background:none; border:none; color:#e6b8ff; cursor:pointer; font-size:15px; line-height:1;
+    min-width:26px; min-height:26px; display:inline-flex; align-items:center; justify-content:center; border-radius:50%}
+  .chip button:hover{background:rgba(255,255,255,.14); color:#fff}
 
-  /* settings */
   .settings-grid{display:grid; grid-template-columns:1fr 1fr; gap:18px}
   @media(max-width:760px){.settings-grid{grid-template-columns:1fr}}
-  .field{background:rgba(14,4,32,.3); border:1px solid rgba(181,103,255,.2); border-radius:14px; padding:14px}
-  .slider{width:100%; accent-color:var(--p3)}
-  .slider-val{font-weight:800; color:#fff; font-size:16px}
-  .switch{display:flex; align-items:center; gap:10px; cursor:pointer; user-select:none}
-  .switch input{width:42px; height:24px; appearance:none; background:rgba(120,90,160,.4);
+  .field{background:rgba(8,4,20,.32); border:1px solid var(--border); border-radius:14px; padding:14px}
+  .slider{width:100%; accent-color:var(--p3); height:6px}
+  .slider-val{font-weight:800; color:#fff; font-size:16px; text-shadow:0 0 12px rgba(181,103,255,.6)}
+  .switch{display:flex; align-items:center; gap:10px; cursor:pointer; user-select:none; color:var(--text)}
+  .switch input{width:44px; height:24px; appearance:none; background:rgba(120,90,160,.4);
     border-radius:999px; position:relative; cursor:pointer; transition:.2s; flex:none}
-  .switch input:checked{background:var(--p1)}
+  .switch input:checked{background:linear-gradient(135deg,var(--pink),var(--p3)); box-shadow:0 0 14px rgba(181,103,255,.5)}
   .switch input::after{content:""; position:absolute; width:18px; height:18px; border-radius:50%;
     background:#fff; top:3px; right:3px; transition:.2s}
-  .switch input:checked::after{right:21px}
+  .switch input:checked::after{right:23px}
 
-  /* character picker */
-  .char-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(58px,1fr)); gap:10px; margin-top:6px}
-  .char-opt{aspect-ratio:1; display:flex; align-items:center; justify-content:center; font-size:30px;
-    background:rgba(14,4,32,.4); border:2px solid rgba(181,103,255,.25); border-radius:14px; cursor:pointer; transition:.15s}
-  .char-opt:hover{transform:translateY(-3px); border-color:var(--p3)}
-  .char-opt.sel{border-color:#ffd86b; background:rgba(181,103,255,.3); box-shadow:0 0 14px rgba(255,216,107,.4)}
-  .char-opt small{display:none}
+  .char-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(56px,1fr)); gap:10px; margin-top:6px}
+  .char-opt{aspect-ratio:1; display:flex; align-items:center; justify-content:center; font-size:30px; outline:none;
+    background:rgba(8,4,20,.45); border:2px solid var(--border); border-radius:14px; cursor:pointer; transition:.15s}
+  .char-opt:hover{transform:translateY(-3px); border-color:var(--p3); box-shadow:0 0 18px rgba(181,103,255,.35)}
+  .char-opt.sel{border-color:var(--gold); background:rgba(181,103,255,.28); box-shadow:0 0 20px rgba(255,216,107,.5)}
 
-  /* RACE */
-  #raceCard{display:none; width:100vw; max-width:100vw; margin-left:calc(50% - 50vw);
-    border-radius:0; padding:18px clamp(16px,4vw,70px)}
-  .track-scroll{border-radius:14px}
-  .track{position:relative; direction:ltr; border:1px solid rgba(181,103,255,.35);
-    border-radius:14px; overflow:hidden; box-shadow:inset 0 0 60px rgba(0,0,0,.35)}
+  /* RACE — full bleed */
+  #raceCard{display:none; width:100vw; max-width:100vw; margin-inline:calc(50% - 50vw);
+    border-radius:0; padding:18px clamp(16px,4vw,70px); background:transparent; border:none; box-shadow:none; backdrop-filter:none}
+  #raceCard::before{display:none}
+  .track-scroll{border-radius:16px}
+  .track{position:relative; direction:ltr; border:1px solid rgba(181,103,255,.55); border-radius:16px; overflow:hidden;
+    box-shadow:0 0 0 1px rgba(255,95,206,.22), 0 0 46px rgba(181,103,255,.4), inset 0 0 80px rgba(0,0,0,.4)}
   .scene{position:absolute; inset:0; width:100%; height:100%; z-index:0}
-  .startline{position:absolute; top:0; bottom:0; left:8px; width:6px; z-index:3;
-    background:repeating-linear-gradient(180deg,#fff 0 8px,#b567ff 8px 16px); opacity:.65; border-radius:3px}
-  .finish{position:absolute; top:0; bottom:0; right:10px; width:16px; z-index:3;
-    background:repeating-linear-gradient(45deg,#fff 0 8px,#171717 8px 16px); opacity:.92;
-    border-radius:3px; box-shadow:0 0 16px rgba(255,255,255,.5)}
-  .flag{position:absolute; right:6px; top:-2px; font-size:24px; z-index:4}
-  .lane{position:relative; display:flex; align-items:center; z-index:1;
-    border-bottom:1px solid rgba(255,255,255,.07)}
+  .track::after{content:""; position:absolute; inset:0; z-index:1; pointer-events:none;
+    background:linear-gradient(90deg, rgba(7,3,20,.5), rgba(7,3,20,.1) 28%, rgba(7,3,20,.1) 72%, rgba(7,3,20,.32))}
+  .startline{position:absolute; top:0; bottom:0; left:8px; width:6px; z-index:4;
+    background:repeating-linear-gradient(180deg,#fff 0 8px,#b567ff 8px 16px); opacity:.7; border-radius:3px;
+    box-shadow:0 0 12px rgba(181,103,255,.6)}
+  .finish{position:absolute; top:0; bottom:0; right:10px; width:16px; z-index:4;
+    background:repeating-linear-gradient(45deg,#fff 0 8px,#171717 8px 16px); opacity:.95;
+    border-radius:3px; box-shadow:0 0 18px rgba(255,255,255,.6)}
+  .flag{position:absolute; right:5px; top:-2px; font-size:26px; z-index:5; filter:drop-shadow(0 0 8px rgba(255,255,255,.5))}
+  .lane{position:relative; display:flex; align-items:center; z-index:2; border-bottom:1px solid rgba(255,255,255,.07)}
   .lane:last-child{border-bottom:none}
-  .lane.won{background:linear-gradient(90deg,transparent,rgba(255,216,107,.28),rgba(181,103,255,.4))}
-  .runner{position:absolute; left:6px; bottom:1px; z-index:2; text-align:center; will-change:transform}
-  .runner .char{line-height:1; transform:scaleX(-1); display:inline-block;
-    filter:drop-shadow(0 2px 5px rgba(0,0,0,.75))}
-  .runner .rname{color:#fff; text-shadow:0 1px 4px #000, 0 0 6px #000; margin-top:-2px;
-    direction:rtl; unicode-bidi:isolate; max-width:110px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .lane.won{background:linear-gradient(90deg,transparent,rgba(255,216,107,.3),rgba(181,103,255,.42)); box-shadow:inset 0 0 30px rgba(255,216,107,.25)}
+  .runner{position:absolute; left:6px; bottom:1px; z-index:3; text-align:center; will-change:transform}
+  .runner .char{line-height:1; transform:scaleX(-1); display:inline-block; filter:drop-shadow(0 2px 6px rgba(0,0,0,.8))}
+  .runner .rname{color:#fff; font-weight:600; text-shadow:0 1px 4px #000, 0 0 7px #000; margin-top:-2px;
+    direction:rtl; unicode-bidi:isolate; max-width:120px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 
   .go-overlay{position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-    background:rgba(14,4,32,.55); backdrop-filter:blur(2px); z-index:10}
-  .go-overlay .btn{width:auto; min-width:240px}
-  .countdown{position:absolute; inset:0; display:none; align-items:center; justify-content:center;
-    z-index:11; pointer-events:none}
-  .countdown span{font-size:120px; font-weight:900;
-    background:linear-gradient(90deg,#ffd86b,#fff,#b567ff); -webkit-background-clip:text; background-clip:text; color:transparent;
-    text-shadow:0 0 40px rgba(181,103,255,.7); animation:pop .8s ease}
-  @keyframes pop{0%{transform:scale(.3); opacity:0}40%{transform:scale(1.15); opacity:1}100%{transform:scale(1); opacity:.9}}
+    background:rgba(7,3,20,.5); backdrop-filter:blur(3px); z-index:10}
+  .go-overlay .btn{width:auto; min-width:260px; font-size:22px}
+  .countdown{position:absolute; inset:0; display:none; align-items:center; justify-content:center; z-index:11; pointer-events:none}
+  .countdown span{font-size:clamp(80px,16vw,150px); font-weight:900;
+    background:linear-gradient(90deg,#ffd86b,#fff,#ff5fce); -webkit-background-clip:text; background-clip:text; color:transparent;
+    text-shadow:0 0 50px rgba(255,95,206,.7); animation:pop .8s ease}
+  @keyframes pop{0%{transform:scale(.3); opacity:0}40%{transform:scale(1.18); opacity:1}100%{transform:scale(1); opacity:.95}}
 
   /* RESULTS */
   #results{display:none; text-align:center}
-  .winner-big{font-size:34px; font-weight:800; margin:6px 0 4px;
-    background:linear-gradient(90deg,#ffd86b,#fff,#b567ff); -webkit-background-clip:text; background-clip:text; color:transparent}
+  .winner-big{font-size:clamp(28px,5vw,38px); font-weight:900; margin:6px 0 4px;
+    background:linear-gradient(90deg,#ffd86b,#fff,#ff5fce); -webkit-background-clip:text; background-clip:text; color:transparent;
+    text-shadow:0 0 36px rgba(255,95,206,.4)}
   .podium{display:flex; flex-direction:column; gap:10px; max-width:480px; margin:18px auto 0}
-  .place{display:flex; align-items:center; gap:14px; background:rgba(150,75,204,.18);
-    border:1px solid rgba(181,103,255,.35); border-radius:12px; padding:12px 16px; font-size:17px}
+  .place{display:flex; align-items:center; gap:14px; background:var(--surface2); border:1px solid var(--border);
+    border-radius:14px; padding:13px 16px; font-size:17px; box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
   .place .medal{font-size:24px}
   .place .pname{font-weight:700; flex:1; text-align:right}
-  .place .pchar{font-size:26px}
-  .place.p1{background:linear-gradient(90deg,rgba(255,216,107,.22),rgba(150,75,204,.18)); border-color:rgba(255,216,107,.5)}
+  .place .pchar{font-size:26px; filter:drop-shadow(0 0 8px rgba(181,103,255,.6))}
+  .place.p1{background:linear-gradient(90deg,rgba(255,216,107,.24),rgba(181,103,255,.16));
+    border-color:rgba(255,216,107,.6); box-shadow:0 0 28px rgba(255,216,107,.35)}
 
-  .hint{font-size:12px; color:#a98fd0; margin-top:8px}
+  .hint{font-size:12px; color:var(--faint); margin-top:8px}
   .toast{position:fixed; bottom:22px; left:50%; transform:translateX(-50%);
-    background:var(--p2); border:1px solid var(--p3); padding:11px 18px; border-radius:12px;
-    font-size:14px; opacity:0; transition:.3s; z-index:50; pointer-events:none}
+    background:rgba(20,10,46,.92); border:1px solid var(--p3); padding:11px 18px; border-radius:12px;
+    font-size:14px; opacity:0; transition:.3s; z-index:50; pointer-events:none; box-shadow:0 0 24px rgba(181,103,255,.4)}
   .toast.show{opacity:1}
   canvas#confetti{position:fixed; inset:0; pointer-events:none; z-index:40}
 
-  /* accessibility & polish */
-  :focus-visible{outline:3px solid #ffd86b; outline-offset:3px; border-radius:8px}
+  /* accessibility */
+  :focus-visible{outline:3px solid var(--gold); outline-offset:3px; border-radius:8px}
   .char-opt:focus-visible{outline-offset:2px}
-  .chip button{min-width:26px; min-height:26px; display:inline-flex; align-items:center; justify-content:center; border-radius:50%}
-  .chip button:hover{background:rgba(255,255,255,.12)}
-  .char-opt{outline:none}
   @media (prefers-reduced-motion: reduce){
     *{animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important}
     .btn:hover,.char-opt:hover{transform:none}
+    .blob{animation:none}
   }
 </style>
 </head>
 <body>
+<div class="bg-fx" aria-hidden="true"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
 <div class="wrap">
   <header>
     <img src="logo.png" alt="RealVardi">
     <h1>מירוץ ההגרלות</h1>
+    <span class="badge">🎲 הגרלה הוגנת · מירוץ חי על המסך</span>
   </header>
-  <p class="sub">טען משתתפים, בחר דמות ומסלול — והראשון לקו הסיום מנצח 🏁</p>
+  <p class="sub">טען משתתפים, בחר דמות — והראשון לקו הסיום בשקיעת לוס אנג'לס מנצח 🌴</p>
 
   <!-- SETUP -->
   <div id="setupCard">
@@ -194,7 +226,6 @@
       </div>
     </div>
 
-    <!-- race settings -->
     <div class="card">
       <h2>⚙️ הגדרות המירוץ</h2>
       <div class="settings-grid">
@@ -230,72 +261,91 @@
     </div>
     <div class="track-scroll">
       <div class="track" id="track">
-        <svg class="scene" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+        <svg class="scene" viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stop-color="#2a0d4d"/><stop offset=".4" stop-color="#7a2a8f"/>
-              <stop offset=".68" stop-color="#d4568a"/><stop offset=".84" stop-color="#ff9e6b"/>
-              <stop offset="1" stop-color="#ffd6a0"/>
+              <stop offset="0" stop-color="#180a36"/><stop offset=".35" stop-color="#3a1568"/>
+              <stop offset=".62" stop-color="#7d2a9e"/><stop offset=".82" stop-color="#d83fa0"/>
+              <stop offset="1" stop-color="#ff8a5c"/>
             </linearGradient>
-            <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stop-color="#3a1a55"/><stop offset="1" stop-color="#1c0c30"/>
+            <linearGradient id="sun" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#fff3c8"/><stop offset=".45" stop-color="#ffd86b"/><stop offset="1" stop-color="#ff4fb0"/>
             </linearGradient>
-            <radialGradient id="sun" cx="50%" cy="50%" r="50%">
-              <stop offset="0" stop-color="#fff3c4"/><stop offset=".6" stop-color="#ffd27a"/>
-              <stop offset="1" stop-color="#ff9e5e" stop-opacity="0"/>
-            </radialGradient>
+            <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#2a0f4d"/><stop offset="1" stop-color="#0a0420"/>
+            </linearGradient>
+            <clipPath id="sunclip"><circle cx="600" cy="250" r="120"/></clipPath>
           </defs>
-          <rect width="1000" height="600" fill="url(#sky)"/>
-          <circle cx="500" cy="350" r="130" fill="url(#sun)"/>
-          <circle cx="500" cy="350" r="62" fill="#fff1c0" opacity=".95"/>
-          <!-- distant hills -->
-          <path d="M0,360 Q200,290 430,345 T1000,330 L1000,470 L0,470 Z" fill="#6a2f7e" opacity=".85"/>
-          <path d="M0,400 Q260,330 560,395 T1000,380 L1000,470 L0,470 Z" fill="#4a1f63"/>
-          <!-- HOLLYWOOD sign on the left hill -->
-          <g transform="translate(150,300) rotate(-4)" fill="#ffffff" opacity=".95"
-             font-family="Arial, sans-serif" font-weight="900" font-size="30" letter-spacing="2">
-            <text x="0" y="0">HOLLYWOOD</text>
+          <rect width="1200" height="600" fill="url(#sky)"/>
+          <!-- stars -->
+          <g fill="#fff" opacity=".85">
+            <circle cx="120" cy="60" r="1.6"/><circle cx="300" cy="40" r="1.2"/><circle cx="500" cy="74" r="1.4"/>
+            <circle cx="770" cy="50" r="1.3"/><circle cx="980" cy="84" r="1.7"/><circle cx="1110" cy="46" r="1.2"/>
+            <circle cx="220" cy="120" r="1.1"/><circle cx="650" cy="112" r="1.1"/><circle cx="900" cy="132" r="1.3"/>
+            <circle cx="44" cy="150" r="1.2"/><circle cx="1165" cy="118" r="1.2"/>
           </g>
-          <!-- foreground ground -->
-          <rect x="0" y="455" width="1000" height="145" fill="url(#ground)"/>
+          <!-- synthwave sun with scanlines -->
+          <g clip-path="url(#sunclip)">
+            <rect x="480" y="130" width="240" height="240" fill="url(#sun)"/>
+            <g fill="#4d1a72">
+              <rect x="480" y="252" width="240" height="4"/><rect x="480" y="264" width="240" height="5"/>
+              <rect x="480" y="280" width="240" height="6"/><rect x="480" y="300" width="240" height="8"/>
+              <rect x="480" y="324" width="240" height="11"/><rect x="480" y="352" width="240" height="15"/>
+            </g>
+          </g>
+          <circle cx="600" cy="250" r="120" fill="none" stroke="#ff8fd1" stroke-opacity=".3" stroke-width="6"/>
+          <!-- city skyline silhouette -->
+          <g fill="#1a0b34" opacity=".96">
+            <rect x="120" y="272" width="26" height="58"/><rect x="150" y="250" width="18" height="80"/>
+            <rect x="172" y="286" width="30" height="44"/><rect x="352" y="266" width="20" height="64"/>
+            <rect x="376" y="246" width="14" height="84"/><rect x="394" y="280" width="24" height="50"/>
+            <rect x="800" y="278" width="22" height="52"/><rect x="826" y="256" width="16" height="74"/>
+            <rect x="846" y="288" width="28" height="42"/><rect x="1012" y="268" width="24" height="62"/>
+            <rect x="1040" y="248" width="16" height="82"/>
+          </g>
+          <!-- neon grid floor -->
+          <rect x="0" y="300" width="1200" height="300" fill="url(#floor)"/>
+          <g stroke="#ff5fce" stroke-opacity=".5" stroke-width="2">
+            <line x1="0" y1="312" x2="1200" y2="312"/><line x1="0" y1="327" x2="1200" y2="327"/>
+            <line x1="0" y1="346" x2="1200" y2="346"/><line x1="0" y1="372" x2="1200" y2="372"/>
+            <line x1="0" y1="406" x2="1200" y2="406"/><line x1="0" y1="452" x2="1200" y2="452"/>
+            <line x1="0" y1="512" x2="1200" y2="512"/><line x1="0" y1="586" x2="1200" y2="586"/>
+          </g>
+          <line x1="0" y1="300" x2="1200" y2="300" stroke="#ff9ae4" stroke-opacity=".95" stroke-width="3"/>
+          <g stroke="#b567ff" stroke-opacity=".48" stroke-width="2">
+            <line x1="600" y1="300" x2="600" y2="600"/><line x1="600" y1="300" x2="760" y2="600"/>
+            <line x1="600" y1="300" x2="940" y2="600"/><line x1="600" y1="300" x2="1160" y2="600"/>
+            <line x1="600" y1="300" x2="1480" y2="600"/><line x1="600" y1="300" x2="440" y2="600"/>
+            <line x1="600" y1="300" x2="260" y2="600"/><line x1="600" y1="300" x2="40" y2="600"/>
+            <line x1="600" y1="300" x2="-280" y2="600"/>
+          </g>
           <!-- palm trees -->
-          <g fill="#160826">
-            <!-- left palm -->
-            <g transform="translate(95,470) scale(1.15)">
-              <path d="M-4,0 Q-12,-70 6,-135 Q14,-70 6,0 Z"/>
-              <g transform="translate(5,-135)">
-                <path d="M0,0 Q-45,-12 -78,-34 Q-40,-4 0,0 Z"/>
-                <path d="M0,0 Q-30,-32 -40,-74 Q-8,-34 0,0 Z"/>
-                <path d="M0,0 Q-6,-44 8,-82 Q14,-40 0,0 Z"/>
-                <path d="M0,0 Q34,-30 44,-72 Q12,-32 0,0 Z"/>
-                <path d="M0,0 Q48,-12 80,-34 Q42,-4 0,0 Z"/>
+          <g fill="#0d0420">
+            <g transform="translate(120,302) scale(1.25)">
+              <path d="M-4,0 Q-13,-74 6,-140 Q15,-74 6,0 Z"/>
+              <g transform="translate(5,-140)">
+                <path d="M0,0 Q-46,-12 -80,-34 Q-40,-4 0,0 Z"/><path d="M0,0 Q-30,-33 -42,-76 Q-8,-34 0,0 Z"/>
+                <path d="M0,0 Q-6,-46 9,-86 Q15,-42 0,0 Z"/><path d="M0,0 Q36,-31 46,-74 Q12,-33 0,0 Z"/>
+                <path d="M0,0 Q50,-12 82,-34 Q42,-4 0,0 Z"/>
               </g>
             </g>
-            <!-- right palm -->
-            <g transform="translate(915,470) scale(1.3)">
-              <path d="M-4,0 Q-14,-78 6,-150 Q16,-78 6,0 Z"/>
-              <g transform="translate(5,-150)">
-                <path d="M0,0 Q-50,-14 -86,-38 Q-44,-4 0,0 Z"/>
-                <path d="M0,0 Q-32,-36 -44,-82 Q-8,-38 0,0 Z"/>
-                <path d="M0,0 Q-6,-50 8,-92 Q16,-44 0,0 Z"/>
-                <path d="M0,0 Q38,-34 50,-80 Q12,-36 0,0 Z"/>
-                <path d="M0,0 Q52,-14 88,-38 Q46,-4 0,0 Z"/>
+            <g transform="translate(1085,302) scale(1.4)">
+              <path d="M-4,0 Q-14,-80 6,-152 Q16,-80 6,0 Z"/>
+              <g transform="translate(5,-152)">
+                <path d="M0,0 Q-52,-14 -88,-38 Q-44,-4 0,0 Z"/><path d="M0,0 Q-33,-37 -46,-84 Q-8,-38 0,0 Z"/>
+                <path d="M0,0 Q-6,-52 9,-94 Q16,-46 0,0 Z"/><path d="M0,0 Q40,-35 52,-82 Q12,-37 0,0 Z"/>
+                <path d="M0,0 Q54,-14 90,-38 Q46,-4 0,0 Z"/>
               </g>
             </g>
-            <!-- small mid palm -->
-            <g transform="translate(770,468) scale(.8)">
-              <path d="M-3,0 Q-10,-60 5,-115 Q12,-60 5,0 Z"/>
-              <g transform="translate(4,-115)">
-                <path d="M0,0 Q-40,-10 -68,-30 Q-34,-3 0,0 Z"/>
-                <path d="M0,0 Q-24,-28 -34,-64 Q-6,-30 0,0 Z"/>
-                <path d="M0,0 Q-4,-40 8,-72 Q12,-34 0,0 Z"/>
-                <path d="M0,0 Q30,-26 40,-62 Q10,-28 0,0 Z"/>
-                <path d="M0,0 Q42,-10 70,-30 Q36,-3 0,0 Z"/>
+            <g transform="translate(930,300) scale(.85)">
+              <path d="M-3,0 Q-10,-62 5,-118 Q12,-62 5,0 Z"/>
+              <g transform="translate(4,-118)">
+                <path d="M0,0 Q-42,-10 -70,-30 Q-34,-3 0,0 Z"/><path d="M0,0 Q-25,-29 -36,-66 Q-6,-30 0,0 Z"/>
+                <path d="M0,0 Q-4,-42 9,-74 Q13,-34 0,0 Z"/><path d="M0,0 Q31,-27 42,-64 Q10,-29 0,0 Z"/>
+                <path d="M0,0 Q44,-10 72,-30 Q36,-3 0,0 Z"/>
               </g>
             </g>
           </g>
-          <!-- ground sheen toward finish -->
-          <rect x="0" y="455" width="1000" height="145" fill="#000000" opacity=".18"/>
         </svg>
         <div class="startline"></div>
         <div class="finish"></div>
@@ -313,7 +363,7 @@
 
   <!-- RESULTS -->
   <div class="card" id="results">
-    <div style="font-size:46px">🏆</div>
+    <div style="font-size:48px; filter:drop-shadow(0 0 16px rgba(255,216,107,.7))">🏆</div>
     <div class="winner-big" id="winnerBig"></div>
     <div class="podium" id="podium"></div>
     <div class="row" style="justify-content:center; margin-top:22px">
@@ -414,7 +464,7 @@ function shuffle(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const
 function pickChar(){ return CHARACTERS[Math.floor(rand(CHARACTERS.length))]; }
 
 /* ---------- the race ---------- */
-const COLORS=['#b567ff','#964bcc','#ffd86b','#ff8fd1','#6bd5ff','#7CFFB2','#ff9d6b','#c0a6ff'];
+const COLORS=['#b567ff','#ff5fce','#ffd86b','#ff8fd1','#22d3ee','#7CFFB2','#ff9d6b','#c0a6ff'];
 let rafId=null, raceState=null;
 
 function syncMute(){ const b=$('#muteBtn'); if(b) b.textContent=soundOn()?'🔊':'🔇'; }
@@ -453,7 +503,7 @@ function buildRace(){
     const run=document.createElement('div'); run.className='runner';
     run.innerHTML=`<div class="char"></div><div class="rname"></div>`;
     const cEl=run.querySelector('.char'); cEl.textContent=ch; cEl.style.fontSize=charPx+'px';
-    cEl.style.filter=`drop-shadow(0 0 6px ${COLORS[i%COLORS.length]})`;
+    cEl.style.filter=`drop-shadow(0 0 7px ${COLORS[i%COLORS.length]})`;
     const nEl=run.querySelector('.rname'); nEl.textContent=name; nEl.style.fontSize=namePx+'px';
     nEl.style.display=showName?'block':'none';
     lane.appendChild(run); track.appendChild(lane);
@@ -562,8 +612,8 @@ const cv=$('#confetti'), ctx=cv.getContext('2d'); let parts=[], confRAF=null;
 function size(){ cv.width=innerWidth; cv.height=innerHeight; } addEventListener('resize',size); size();
 function burst(){
   if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  const cols=['#b567ff','#964bcc','#ffd86b','#ffffff','#4b0d87','#ff8fd1']; parts=[];
-  for(let i=0;i<170;i++) parts.push({ x:innerWidth/2+(Math.random()-.5)*280, y:innerHeight*0.3,
+  const cols=['#b567ff','#ff5fce','#ffd86b','#ffffff','#22d3ee','#964bcc']; parts=[];
+  for(let i=0;i<180;i++) parts.push({ x:innerWidth/2+(Math.random()-.5)*300, y:innerHeight*0.3,
     vx:(Math.random()-.5)*9, vy:Math.random()*-11-4, s:5+Math.random()*7, c:cols[i%cols.length],
     r:Math.random()*6, vr:(Math.random()-.5)*.4, life:1 });
   if(confRAF) cancelAnimationFrame(confRAF); loop();
